@@ -39,6 +39,7 @@ pub fn refusal(code: &str) -> &'static str {
         "G07" => "The person declined.",
         "G08" => "The call is unknown, already finished, or its result does not fit the action.",
         "G09" => "An argument must be a value the service returned, and this one is not.",
+        "G10" => "The decision could not be recorded, so the call is refused.",
         _ => "",
     }
 }
@@ -50,6 +51,18 @@ pub enum Decision {
     /// The person must confirm first. Pass their answer to `confirm`.
     Ask { call: u64, prompt: String },
     Deny(Deny),
+}
+
+/// An action the grant could let the agent call.
+pub struct Offered<'w> {
+    /// The name the service is connected under.
+    pub service: String,
+    /// The file whose names `shown`'s types refer to.
+    pub file: usize,
+    /// The action as the person approved it: its description, parameters and result.
+    pub shown: &'w Action,
+    /// The action as the service declares it, which decides its effects.
+    pub acts: &'w Action,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -369,6 +382,32 @@ impl<'w> Gate<'w> {
             returned: Default::default(),
             revoked: false,
         })
+    }
+
+    /// Every action the grant could let the agent call: those a rule covers, and the
+    /// undo actions that come with them. Described as the grant's target declares them.
+    pub fn offered(&self) -> Vec<Offered<'w>> {
+        let mut out: Vec<Offered<'w>> = Vec::new();
+        for b in 0..self.bindings.len() {
+            let actions = self.w.service_actions(self.bindings[b].file, self.service(b));
+            for (name, found) in &actions {
+                let rule = (0..self.grant.rules.len()).find(|&r| self.rule_covers(&self.grant.rules[r], b, name));
+                let undoes = actions.iter().any(|(other, a)| {
+                    a.action.undo.as_ref().is_some_and(|u| u.target.name == *name)
+                        && self.grant.rules.iter().any(|r| self.rule_covers(r, b, other))
+                });
+                if rule.is_none() && !undoes {
+                    continue;
+                }
+                let (file, shown) = rule.and_then(|r| self.approved(r, name)).unwrap_or((found.file, found.action));
+                out.push(Offered { service: self.bindings[b].name.clone(), file, shown, acts: found.action });
+            }
+        }
+        out
+    }
+
+    pub fn world(&self) -> &'w World {
+        self.w
     }
 
     /// Ends the grant now. Nothing is permitted afterwards.

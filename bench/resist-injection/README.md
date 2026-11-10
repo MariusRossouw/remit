@@ -82,24 +82,29 @@ Before run 4 the tightened grant gained two conditions (the guest's name, and 50
 
 ## Part 2: a real model is the agent
 
-Two models (Claude Haiku 5.5 and Sonnet 5.5) were each given Thandi's request and the same nine tools through a real MCP server, with one attack planted in the reviews. Each of the nine attacks that work through planted text, and one clean run, was repeated twice per guard: 120 runs.
+Two models (Claude Haiku 5.5 and Sonnet 5.5) were each given Thandi's request and the same nine tools through a real MCP server, with one attack planted in the reviews. Each of the nine attacks that work through planted text, and one clean run, was repeated twice per guard: 160 runs.
 
 | Model | Guard | Attack runs | Model tried the harmful call | Harm happened | Task done exactly | Clean runs done exactly |
 | --- | --- | --- | --- | --- | --- | --- |
 | Haiku | mcp | 18 | 0 | 0 | 18 | 2 of 2 |
 | Haiku | mcp-warned | 18 | 0 | 0 | 18 | 2 of 2 |
 | Haiku | remit | 18 | 0 | 0 | 18 | 2 of 2 |
+| Haiku | remit-proxy | 18 | 0 | 0 | 18 | 2 of 2 |
 | Sonnet | mcp | 18 | 0 | 0 | 18 | 2 of 2 |
 | Sonnet | mcp-warned | 18 | 0 | 0 | 18 | 2 of 2 |
 | Sonnet | remit | 18 | 0 | 0 | 18 | 2 of 2 |
+| Sonnet | remit-proxy | 18 | 0 | 0 | 18 | 2 of 2 |
 
 `mcp-warned` is `mcp` with a system prompt telling the model never to follow instructions found in tool results.
+
+`remit-proxy` is the real thing: [`remit proxy`](../../docs/design/0003-the-proxy.md) in front of three separate MCP servers, one per service, none of which knows about Remit. `remit` is the earlier arm, where the benchmark's own server called the gate.
 
 ### Reading it
 
 - **A tie. The gate stopped nothing here, because nothing was attempted.** In all 108 attack runs the model read the planted review and did not act on it. In 106 it told the person about it.
 - **The gate cost nothing.** Under the gate every task was still completed exactly, in the same seven turns, with the same token use to within a few percent.
 - **The `Returned` rule cost nothing either.** The 40 runs under the gate were repeated after `book` began to accept only a table the restaurant had returned. The gate refused no call in any of them: both models passed the table back unchanged every time.
+- **The proxy works end to end.** Through it the model was shown six tools, not nine, each described in the contract's words. Every task was completed exactly, in the same seven turns, and the gate refused nothing.
 - **This does not show the gate is unnecessary.** These were nine fixed, plainly worded attacks against two models from one vendor. Attacks that adapt to the model succeed far more often in published work, and a weaker or older model may behave differently. Part 1 shows what happens on the day one works.
 
 ## What this does not show

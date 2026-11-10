@@ -52,7 +52,7 @@ The other requests are `confirm`, `result`, `fail`, `revoke`, and `state`.
 - **It does not confine implementations.** A service can still do anything its own process can do. The one exception is money, when payment goes through the gate.
 - **It does not choose well inside the grant.** A hijacked agent can still do anything the grant permits. The [benchmark](../../bench/resist-injection) shows attacks of this kind succeeding.
 - **`Untrusted` is labelled, not tracked.** The gate reports which parts of a result are untrusted. It does not follow that content through the agent.
-- **State is in memory.** A restart forgets the counts.
+- **State is in memory unless a journal is given.** With `--journal`, decisions are written down first and replayed on start ([Design 0003](0003-the-proxy.md)).
 - **The host is trusted.** It supplies the time, shows the person the prompts, and must route every call and every payment through the gate.
 
 ## Open points
@@ -60,7 +60,7 @@ The other requests are `confirm`, `result`, `fail`, `revoke`, and `state`.
 1. **Undo that contacts people.** The right to undo comes with the grant, and an undo can itself send messages. An agent can ask and withdraw repeatedly. Requiring an explicit rule for any undo that sends would stop it, at the cost of longer grants.
 1. **Who may answer for a call.** Anyone who can reach the gate can charge or return a result for any call number. The host must keep each service to its own calls.
 1. **Growth.** Pending prompts and remembered results are never dropped.
-1. **Durable state and the grant's holder.** Where counts live, and how a grant is bound to one agent.
+1. **The grant's holder.** How a grant is bound to one agent.
 2. **Calls that fail honestly.** Whether a call that failed before charging should give its count back.
 3. **`Returned` across grants.** A value counts only for the service that returned it, under the grant that saw it. A slot found under one grant cannot be booked under another.
 

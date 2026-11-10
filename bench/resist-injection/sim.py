@@ -192,6 +192,7 @@ class Services:
             "requests": self.requests,
             "payments": self.payments,
             "messages": self.messages,
+            "withdrawn": self.withdrawn,
             "calls": self.log,
         }
 

@@ -50,9 +50,10 @@ Services are described by short contracts, such as the [restaurant vocabulary](e
 | Contract and grant language, with a checker that explains each error | Built. [Specification](SPEC.md) |
 | The gate: enforces a grant at call time | Built. Tested, including by an outside audit that found 24 flaws, since fixed. Not proven, and more flaws are likely |
 | Plain-language summary of a grant | Built |
-| Running in front of real MCP servers | **Not built.** The gate speaks its own small protocol today |
-| Counts that survive a restart | **Not built.** State is in memory, so a restart forgets what was used |
-| Spending caps enforced by a payment network | **Not built.** Today a service must ask the gate before it charges |
+| Running in front of real MCP servers | Built. A proxy that enforces a grant in front of unmodified MCP servers. [Design 0003](docs/design/0003-the-proxy.md) |
+| Counts that survive a restart | Built. Decisions are journalled, and a gate that cannot trust its journal allows nothing |
+| Drafting a contract from an existing server's tool list | **Not built.** Contracts are written by hand |
+| Spending caps enforced by a payment network | **Not built.** Behind the proxy, the gate cannot see what a server charges. It counts each paying call as its whole ceiling |
 | Confining a service's own code | **Not built, and not claimed.** A service can do whatever its process can do |
 | Following untrusted content through the agent | **Not built.** Content is labelled untrusted. Nothing tracks where it goes |
 | Shared vocabularies identified by content hash | **Not built.** [Designed](docs/design/0001-shared-vocabularies.md) only |
@@ -83,12 +84,13 @@ cargo run -- check --json tests/bad/R11-irreversible-allowed.remit
 echo '{"op":"call","service":"bistro","action":"todaysSpecials"}' | cargo run -- gate examples/dinner/friday-dinner.remit --bind bistro=examples/dinner/bistro.remit#Bistro
 ```
 
-`check` applies the rules in the specification and reports each problem with a suggested fix. `explain` prints a grant in plain language, using only the words in the contracts. `gate` enforces a grant: it answers each call an agent asks for with allow, ask, or deny, and keeps every count and spending limit itself ([Design 0002](docs/design/0002-the-gate.md)).
+`check` applies the rules in the specification and reports each problem with a suggested fix. `explain` prints a grant in plain language, using only the words in the contracts. `proxy` is the way to use it for real: an MCP server that enforces a grant in front of other MCP servers ([Design 0003](docs/design/0003-the-proxy.md)). `gate` is the same enforcement over a small protocol of its own: it answers each call an agent asks for with allow, ask, or deny, and keeps every count and spending limit itself ([Design 0002](docs/design/0002-the-gate.md)).
 
 ## Read next
 
 - [Language specification](SPEC.md): contracts and grants, and exactly what the gate enforces.
 - [Design 0002: The gate](docs/design/0002-the-gate.md): how a grant is made to hold, and what it does not do.
+- [Design 0003: The proxy](docs/design/0003-the-proxy.md): putting the gate in front of MCP servers that have never heard of it.
 - [Evidence](bench/README.md): each benchmark, its result, and what it does not show.
 - [Review 0001](docs/reviews/0001-outside-review.md): the criticism that reshaped the project, and our response.
 - [Roadmap](docs/roadmap.md): what ships next.

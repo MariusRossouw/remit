@@ -281,6 +281,7 @@ Values are JSON. Money is a string such as `"500 ZAR"` and is never negative. Du
 | G07 | The person declined |
 | G08 | The call is unknown or finished, or its result does not fit |
 | G09 | An argument for a `Returned` parameter is not a value the service returned |
+| G10 | The decision could not be written to the journal |
 
 ## 15. What is guaranteed, and by what
 
@@ -306,4 +307,3 @@ Because a service can omit the mark, a caller must treat everything a service re
 - Generic types other than `List`, `Untrusted`, and `Returned`.
 - A marker for personal data.
 - Who holds a grant, and the format it travels in.
-- Gate state that survives a restart.

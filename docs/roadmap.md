@@ -27,6 +27,7 @@ The plan changed in November 2026 after an [outside review](reviews/0001-outside
 
 - A contract and grant language with a checker that explains each error ([SPEC.md](../SPEC.md)).
 - The gate, which enforces a grant at call time ([Design 0002](design/0002-the-gate.md)).
+- A proxy that puts the gate in front of unmodified MCP servers, with a journal ([Design 0003](design/0003-the-proxy.md)).
 - A plain-language summary of a grant.
 - Three benchmarks against existing alternatives ([bench](../bench/README.md)).
 
@@ -34,11 +35,12 @@ The plan changed in November 2026 after an [outside review](reviews/0001-outside
 
 The smallest thing a team running agents could adopt.
 
-- A proxy that sits in front of unmodified MCP servers and enforces a grant on every tool call.
-- A way to describe an existing MCP server's tools as a contract, starting from its tool list.
-- Counts and totals that survive a restart. A gate that cannot read its state refuses everything.
-- A record of every decision, with the rule that allowed or refused it.
-- **Exit:** the dinner scenario runs against real MCP servers that know nothing about Remit, and a restart in the middle loses nothing.
+- A proxy that sits in front of unmodified MCP servers and enforces a grant on every tool call. Built ([Design 0003](design/0003-the-proxy.md)).
+- Counts and totals that survive a restart. Built: a gate that cannot trust its journal allows nothing.
+- A record of every decision. Built: the journal.
+- A way to describe an existing MCP server's tools as a contract, starting from its tool list. Not built.
+- Tried against real, widely used MCP servers, not only ones written for the benchmark. Not done.
+- **Exit:** the dinner scenario runs against real MCP servers that know nothing about Remit, and a restart in the middle loses nothing. Met for servers written for the benchmark.
 
 ### S2: Evidence we did not write
 

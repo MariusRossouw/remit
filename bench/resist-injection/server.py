@@ -8,6 +8,8 @@ Settings come from the environment:
   BENCH_GUARD   a guard name from sim.py
   BENCH_ATTACK  an attack name from sim.py, or "none"
   BENCH_RECORD  file to write what really happened to, after every call
+  BENCH_ONLY    offer one service's tools only, under their bare names, as a
+                separate server for that service would
 """
 
 import json
@@ -60,6 +62,10 @@ def main():
     guard = GUARDS[os.environ.get("BENCH_GUARD", "mcp")](services)
     record_path = os.environ.get("BENCH_RECORD")
     refusals = []
+    only = os.environ.get("BENCH_ONLY")
+    tools = TOOLS
+    if only:
+        tools = [dict(t, name=t["name"].split("_", 1)[1]) for t in TOOLS if t["name"].startswith(only + "_")]
 
     def save():
         if record_path:
@@ -80,9 +86,11 @@ def main():
         elif method == "ping":
             result = {}
         elif method == "tools/list":
-            result = {"tools": TOOLS}
+            result = {"tools": tools}
         elif method == "tools/call":
             service, _, action = params.get("name", "").partition("_")
+            if only:
+                service, action = only, params.get("name", "")
             try:
                 value = guard.call(service, action, params.get("arguments") or {})
                 result = {"content": [{"type": "text", "text": "Done." if value is None else json.dumps(value)}]}
