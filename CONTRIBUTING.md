@@ -12,6 +12,8 @@ Remit is at the vision stage. There is no code to patch yet, so the most valuabl
 
 Small fixes can go straight to a pull request. For anything that changes a principle, the contract syntax, or a milestone, open an issue first so the reasoning is recorded.
 
+A design proposal must answer the decision test in [the values](docs/values.md). A proposal that crosses a non-negotiable will not be accepted, however good it is otherwise.
+
 ## Sign your commits off
 
 Every commit must carry a sign-off line stating that you have the right to contribute it, under the [Developer Certificate of Origin](https://developercertificate.org/):

@@ -1,6 +1,6 @@
 # Scenario: dinner for four, bill split
 
-One use case, worked end to end, to expose the real design questions. Syntax is illustrative.
+One use case, worked end to end, to expose the real design questions. The contracts are in [examples/dinner](../examples/dinner), written in [version 0 of the language](../SPEC.md).
 
 ## The people and programs
 
@@ -27,11 +27,13 @@ Her agent asks the runtime for a capability. Thandi sees a prompt generated from
 She approves. The agent now holds this, and nothing else:
 
 ```
-grant to agent(thandi) {
-  Restaurant.findTables
-  Restaurant.book        where spend <= R500, reversible
-  Pay.request            where to in [sipho, lerato, anna]
-  expires: Friday 23:59
+"Book Friday dinner for four and split the deposit."
+grant FridayDinner {
+  allow dining.Restaurant.findTables
+  allow dining.Restaurant.reviews
+  allow dining.Restaurant.book   where spend <= 500 ZAR, times <= 1
+  allow pay.Wallet.request       where to in ["sipho", "lerato", "anna"], times <= 3
+  expires 2026-11-13T23:59+02:00
 }
 ```
 
@@ -56,9 +58,9 @@ The first defence is probabilistic. The second is not.
 
 ## Step 4: booking
 
-The agent calls `book`. The runtime checks the call against the grant: spend within R500, reversible until two hours before. It passes. Because the grant already covered it, Thandi is not interrupted.
+The agent calls `book`. The runtime checks the call against the grant: total spend within R500, one booking only, and `book` has an undo. It passes. Because the grant already covered it, Thandi is not interrupted.
 
-Had the action been irreversible, the runtime would have stopped and asked her, whatever the agent wanted.
+Had `book` had no undo, the grant itself would have been rejected until Thandi either chose to be asked each time or accepted in writing that the action cannot be reversed.
 
 ## Step 5: a bad dependency inside Bistro
 
@@ -79,7 +81,7 @@ Thandi's agent could request money. It could never pull it.
 Every call is logged with the chain of authority behind it:
 
 ```
-Thandi -> agent -> Bistro.book(slot, guest)   spend R480   reversible until Fri 17:00
+Thandi -> agent -> Bistro.book(slot, guest)   spend R480   undo: cancel
 ```
 
 Thandi can read it, revoke the grant, or cancel the booking from the log.

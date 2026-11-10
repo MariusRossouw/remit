@@ -1,0 +1,15 @@
+// A vocabulary for asking people for money.
+
+type Request { id: Text  to: Text  amount: Money  reason: Text }
+
+"A wallet that can ask others for money. It cannot take money."
+interface Wallet {
+  "Ask someone to pay you. They decide whether to pay."
+  action request(to: Text, amount: Money, reason: Text) -> Request
+    effects: send
+    undo: cancelRequest
+
+  "Withdraw a request for money."
+  action cancelRequest(request: Request)
+    effects: send
+}

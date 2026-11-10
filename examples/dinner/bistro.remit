@@ -1,0 +1,17 @@
+use dining from "./dining.remit"
+
+type Dish { name: Text  price: Money }
+
+"A small restaurant."
+service Bistro implements dining.Restaurant {
+  uses tables: Store
+
+  "Reserve a table. Deposit never exceeds R500."
+  action book(slot: dining.Slot, guest: dining.Contact) -> dining.Booking
+    effects: write, spend(max: 500 ZAR)
+    undo: cancel
+
+  "List today's specials."
+  action todaysSpecials() -> List<Dish>
+    effects: read
+}

@@ -11,6 +11,11 @@ Milestones have exit criteria, not dates. Each one must be useful without the ne
 | Safe unread | No implementation in a public red-team suite exceeds its granted capabilities |
 | Minutes, not weeks | From a one-sentence idea to a running, bounded service in under ten minutes |
 | Plain-language consent | People shown a generated permission prompt can correctly say what they approved |
+| Cheap to read | The same service costs fewer tokens to describe as a Remit contract than as MCP tool definitions or OpenAPI, measured and published |
+| Known interfaces cost nothing | A service implementing an interface the agent has already seen is described by a hash and its additions |
+| Few round trips | Benchmark tasks finish in a published number of model turns, and the number falls over time |
+| Enforcement is cheap | Authorising a call needs no network request and adds under a millisecond |
+| Proven, not asserted | The core guarantees are stated as theorems and machine-checked, with the trusted parts listed |
 
 The targets are first guesses. The measures are what matter.
 
@@ -25,10 +30,12 @@ The targets are first guesses. The measures are what matter.
 
 The smallest thing that is useful alone.
 
-- Grammar for interfaces, services, actions, effects, views, and `Untrusted`.
+- Grammar for types, interfaces, services, actions, effects, grants, and `Untrusted`. First draft: [SPEC.md](../SPEC.md).
 - Conformance checking: a service may do less than the interface it implements, never more ([Design 0001](design/0001-shared-vocabularies.md)).
 - A checker with machine-readable errors and suggested fixes.
 - Emitters: an MCP server skeleton and a plain-language permission summary.
+- The safety claims written as precise statements: conformance bounds every implementer, authority only narrows, `Untrusted` never reaches a trusted position.
+- A token benchmark against MCP tool definitions and OpenAPI for the same services.
 - Implementations are written in an existing language for now.
 - **Exit:** the dinner scenario's contracts check, and an agent holding only the specification can write a new one.
 
@@ -40,6 +47,7 @@ This milestone answers the adoption risk: nobody has to switch languages to bene
 - A grant format that each hop can narrow but never widen, built on existing token work.
 - An audit log with the chain of authority.
 - A public red-team suite.
+- Machine-checked proofs of the M1 statements, and a written list of what must be trusted for them to hold.
 - **Exit:** the compromised dependency and the over-limit booking from the scenario both fail, demonstrably.
 
 ### M3: Projections

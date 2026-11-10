@@ -2,7 +2,7 @@
 
 **A language and runtime for software that is safe to run without reading it.**
 
-Status: vision stage. Nothing here runs yet. The syntax in these documents is illustrative and will change.
+Status: early. The [language specification](SPEC.md) is a first draft and nothing runs yet.
 
 ## The problem
 
@@ -17,14 +17,26 @@ A remit is the area of authority someone has been given. In Remit, every program
 You write a short **contract** that says what a service can do. Everything else follows from it.
 
 ```
-service Bistro {
+type Review { rating: Int  body: Untrusted<Text> }
+
+"A place that takes table bookings."
+interface Restaurant {
+  "Find free tables for a date and party size."
   action findTables(date: Date, party: Int) -> List<Slot>
     effects: read
 
-  action book(slot: Slot, guest: Contact) -> Booking
-    effects: write, spend(max: deposit), reversible(until: slot.start - 2h)
+  "Read what other guests wrote."
+  action reviews() -> List<Review>
+    effects: read
 
-  view Review { body: Untrusted<Text> }
+  "Reserve a table. May take a deposit."
+  action book(slot: Slot, guest: Contact) -> Booking
+    effects: write, spend
+    undo: cancel
+
+  "Cancel a booking and return its deposit."
+  action cancel(booking: Booking)
+    effects: write
 }
 ```
 
@@ -42,7 +54,7 @@ The implementation behind the contract can be written by an agent and never read
 
 1. **Contracts are durable; code is disposable.** A person reads twenty lines of what. Machines write and check the two thousand lines of how.
 2. **No ambient authority.** Code can touch only what it is handed. A dependency that was not given the network cannot reach the network.
-3. **Effects are in the type.** Read, write, spend, and irreversible are declared, checked, and visible before anything runs.
+3. **Effects are in the type.** Whether an action reads, writes, sends, or spends, and whether it can be undone, is declared, checked, and visible before anything runs.
 4. **Untrusted content stays untrusted.** Text from outside is typed as data from storage to screen. It can be shown. It can never become code or instructions.
 5. **Authority is delegated, narrowed, and logged.** A user hands an agent a scoped, revocable capability, never a session. Each hop can only reduce it.
 6. **One definition, many projections.** The same contract serves a person, an agent, and another program.
@@ -58,6 +70,8 @@ The implementation behind the contract can be written by an agent and never read
 
 ## Read next
 
+- [Values](docs/values.md): the lines we will not cross, and how we decide everything else.
+- [Language specification](SPEC.md): the whole contract language, version 0.
 - [The dinner scenario](docs/scenario.md): one use case worked end to end.
 - [Positioning](docs/positioning.md): what exists already and where Remit fits.
 - [Roadmap](docs/roadmap.md): goals, milestones, and how we reach agents and new builders.

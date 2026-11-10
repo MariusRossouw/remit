@@ -1,6 +1,6 @@
 # Design 0001: Shared vocabularies
 
-Status: proposed. Syntax is illustrative.
+Status: proposed. Syntax follows [version 0 of the language](../../SPEC.md).
 
 ## The question
 
@@ -29,12 +29,21 @@ interface Restaurant {
   action findTables(date: Date, party: Int) -> List<Slot>
     effects: read
 
-  "Reserve a table. May take a deposit. Can be cancelled."
-  action book(slot: Slot, guest: Contact) -> Booking
-    effects: write, spend, reversible
+  "Read what other guests wrote."
+  action reviews() -> List<Review>
+    effects: read
 
-  view Review { body: Untrusted<Text> }
+  "Reserve a table. May take a deposit."
+  action book(slot: Slot, guest: Contact) -> Booking
+    effects: write, spend
+    undo: cancel
+
+  "Cancel a booking and return its deposit."
+  action cancel(booking: Booking)
+    effects: write
 }
+
+type Review { rating: Int  body: Untrusted<Text> }
 ```
 
 A service that implements it:
@@ -52,10 +61,11 @@ service Bistro implements dining.Restaurant {
 A grant written against the interface:
 
 ```
-grant to agent(thandi) {
-  dining.Restaurant.findTables
-  dining.Restaurant.book   where spend <= R500
-  expires: Friday 23:59
+"Book Friday dinner."
+grant FridayDinner {
+  allow dining.Restaurant.findTables
+  allow dining.Restaurant.book   where spend <= 500 ZAR, times <= 1
+  expires 2026-11-13T23:59+02:00
 }
 ```
 
@@ -66,7 +76,7 @@ The grant works on Bistro, and on any other service that implements the same int
 - The toolchain reduces an interface to a canonical form and hashes it. The hash covers everything: action names, types, effects, and the description strings, because those descriptions become the consent prompt a person approves.
 - A name such as `example.org/dining` is an address the toolchain fetches from. Whoever controls the address controls the name, as with Go modules. Nobody can squat a global name, because there are none.
 - The first fetch records the hash in a lockfile. After that the name is a convenience and the hash is the truth, so a hijacked address cannot change what an existing grant means.
-- A small standard set (`Date`, `Money`, `Contact`, `Text`, `Untrusted`, and similar) ships with the toolchain. Domain vocabularies such as dining do not, and are left to whoever needs them.
+- A small set of built-in types (`Date`, `Money`, `Text`, `Untrusted`, and similar) is part of the language. Domain vocabularies such as dining do not, and are left to whoever needs them.
 
 ## The conformance rules
 
@@ -77,17 +87,18 @@ A service implements an interface when, for every action in the interface:
 | Present | The service has an action with the same name |
 | Inputs | It accepts every input the interface lists. Extra inputs must be optional |
 | Outputs | It returns at least what the interface promises. Extra fields are allowed |
-| Effects | Its effects are a subset of the interface's. Limits on an effect may be tighter, never looser |
+| Effects | Its effects are a subset of the interface's. A spend ceiling is the same or lower |
+| Undo | If the interface promises an undo, the service does too, for the same period or longer |
 | Provenance | Anything the interface marks `Untrusted` stays `Untrusted` for callers that come through the interface |
 
-The effects rule carries the weight. If `Restaurant.book` allows `write, spend, reversible`, then no implementation can be irreversible, and none can reach beyond writing and spending. A person who approved the interface has approved an upper bound on every service behind it.
+The effects rule carries the weight. If `Restaurant.book` allows `write, spend` and promises an undo, then no implementation can be irreversible, and none can reach beyond writing and spending. A person who approved the interface has approved an upper bound on every service behind it.
 
 ## What implementing an interface does not prove
 
 The checker proves shape and bounds. It cannot prove that Bistro is a real restaurant, that its tables exist, or that it is the Bistro you think it is. That is a question of who you trust, and it is separate from this design. A grant can narrow the audience when it matters:
 
 ```
-dining.Restaurant.book   where service in [bistro.example]
+dining.Restaurant.book   where service in ["bistro.example"]
 ```
 
 Reputation and attestation belong with discovery, later in the roadmap.
@@ -132,7 +143,7 @@ The adapter is checked like any other service. It can be written by Bistro, by a
 
 ## Consequences for the grammar
 
-M1 needs `interface`, `implements`, and `use`, as well as `service`, `action`, `effects`, and `view`. The conformance rules and the compatibility comparison are the core of the checker.
+The grammar needs `interface`, `implements`, and `use`, as well as `service`, `action`, and `effects`. These are now in [the specification](../../SPEC.md). The conformance rules and the compatibility comparison are the core of the checker.
 
 ## Consequences for the emitters
 
@@ -141,7 +152,7 @@ M1 needs `interface`, `implements`, and `use`, as well as `service`, `action`, `
 
 ## Open
 
-1. **Ordering of effect limits.** "Tighter, never looser" needs a precise definition for each effect: spend ceilings, reversal windows, and so on.
+1. **Ordering of effect limits.** Settled for version 0: effects are an upper bound and undo is a promise, each with one ordering. It will need revisiting when undo periods can depend on data.
 2. **Where the spend amount comes from.** A service must not be able to state its own deposit and have it believed. The likely answer is that money moves only through a payment capability the runtime mediates, so the runtime sees the real amount.
 3. **Canonical form.** The exact rules for hashing, including how one interface refers to another's types.
 4. **Third-party adapters and consent.** Should a person be told when a call goes through an adapter the service's owner did not write?
