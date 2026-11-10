@@ -1,0 +1,28 @@
+// The three services in this benchmark. The vocabularies are the ones in examples/dinner.
+
+use dining from "../../../examples/dinner/dining.remit"
+use pay from "../../../examples/dinner/pay.remit"
+
+type Dish    { name: Text  price: Money }
+type Payment { id: Text  to: Text  amount: Money }
+
+"A small restaurant."
+service Bistro implements dining.Restaurant {
+  "List today's specials."
+  action todaysSpecials() -> List<Dish>
+    effects: read
+}
+
+"A wallet app. It can ask for money and it can send money."
+service Tab implements pay.Wallet {
+  "Send money to someone. It cannot be recalled."
+  action send(to: Text, amount: Money) -> Payment
+    effects: spend
+}
+
+"An email account."
+service Mail {
+  "Send an email."
+  action sendMessage(to: Text, body: Text)
+    effects: send
+}

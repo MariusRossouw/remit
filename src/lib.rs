@@ -4,6 +4,8 @@ pub mod ast;
 pub mod check;
 pub mod diag;
 pub mod explain;
+pub mod gate;
+pub mod json;
 pub mod lexer;
 pub mod list;
 pub mod parser;

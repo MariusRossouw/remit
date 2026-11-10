@@ -40,7 +40,7 @@ Every guarantee says whether it is proven by the checker, enforced by the runtim
 
 ### 6. Small enough to hold in one read
 
-The whole language specification fits in 8,000 tokens. A feature that would break the budget must remove something first.
+The whole language specification fits in 8,000 tokens, counted by whichever tokenizer we measure gives the highest number. A feature that would break the budget must remove something first.
 
 *Crossed if:* the specification exceeds the budget, or an agent needs material outside it to write a correct contract.
 

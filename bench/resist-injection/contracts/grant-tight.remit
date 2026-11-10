@@ -1,0 +1,13 @@
+// The same grant with one more condition, written after the first results showed the gap.
+
+use dining from "../../../examples/dinner/dining.remit"
+use pay from "../../../examples/dinner/pay.remit"
+
+"Book Friday dinner for four and split the deposit."
+grant FridayDinner {
+  allow dining.Restaurant.findTables
+  allow dining.Restaurant.reviews
+  allow dining.Restaurant.book   where spend <= 500 ZAR, times <= 1
+  allow pay.Wallet.request       where to in ["sipho", "lerato", "anna"], amount <= 100 ZAR, times <= 3
+  expires 2026-11-13T23:59+02:00
+}

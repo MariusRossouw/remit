@@ -58,9 +58,10 @@ You need [Rust](https://rustup.rs).
 cargo run -- check examples/dinner/*.remit
 cargo run -- explain examples/dinner/friday-dinner.remit
 cargo run -- check --json tests/bad/R11-irreversible-allowed.remit
+echo '{"op":"call","service":"bistro","action":"todaysSpecials"}' | cargo run -- gate examples/dinner/friday-dinner.remit --bind bistro=examples/dinner/bistro.remit#Bistro
 ```
 
-`check` applies the rules in the specification and reports each problem with a suggested fix. `explain` prints a grant in plain language, using only the words in the contracts.
+`check` applies the rules in the specification and reports each problem with a suggested fix. `explain` prints a grant in plain language, using only the words in the contracts. `gate` enforces a grant: it answers each call an agent asks for with allow, ask, or deny, and keeps every count and spending limit itself ([Design 0002](docs/design/0002-the-gate.md)).
 
 ## Principles
 
@@ -89,6 +90,7 @@ cargo run -- check --json tests/bad/R11-irreversible-allowed.remit
 - [Roadmap](docs/roadmap.md): goals, milestones, and how we reach agents and new builders.
 - [Evidence](bench/README.md): how each claim is measured against existing alternatives, and the results so far.
 - [Design 0001: Shared vocabularies](docs/design/0001-shared-vocabularies.md): who defines `Restaurant`, and why a grant against it is safe.
+- [Design 0002: The gate](docs/design/0002-the-gate.md): what makes a grant hold at call time, and what it does not do.
 
 ## Contributing
 

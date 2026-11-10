@@ -176,7 +176,7 @@ fn load_file(
 // ---------------------------------------------------------------------------
 
 #[derive(Clone, Debug, PartialEq)]
-enum Ty {
+pub enum Ty {
     Scalar(Scalar),
     List(Box<RTy>),
     Record(usize, String),
@@ -186,10 +186,10 @@ enum Ty {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-struct RTy {
-    ty: Ty,
-    optional: bool,
-    untrusted: bool,
+pub struct RTy {
+    pub ty: Ty,
+    pub optional: bool,
+    pub untrusted: bool,
 }
 
 enum Why {
@@ -290,7 +290,7 @@ impl World {
         }
     }
 
-    fn resolve_type(&self, f: usize, t: &TypeRef) -> RTy {
+    pub fn resolve_type(&self, f: usize, t: &TypeRef) -> RTy {
         let mut r = match &t.base {
             Base::Scalar(s) => RTy { ty: Ty::Scalar(*s), optional: false, untrusted: false },
             Base::List(inner) => {
@@ -961,17 +961,23 @@ impl<'a> Ctx<'a> {
             for cond in &rule.conds {
                 match cond {
                     Cond::Irreversible(_) => accepted_irreversible = true,
-                    Cond::Spend(_, pos) => {
-                        if action.effect(EffectKind::Spend).is_none() {
-                            self.diag(
-                                "R10",
-                                f,
-                                *pos,
-                                format!("`{}` does not spend, so a spending limit has no meaning.", full),
-                                "Remove the `spend <=` condition.".into(),
-                            );
-                        }
-                    }
+                    Cond::Spend(limit, pos) => match action.effect(EffectKind::Spend) {
+                        None => self.diag(
+                            "R10",
+                            f,
+                            *pos,
+                            format!("`{}` does not spend, so a spending limit has no meaning.", full),
+                            "Remove the `spend <=` condition.".into(),
+                        ),
+                        Some(Effect { max: Some(max), .. }) if max.currency != limit.currency => self.diag(
+                            "R10",
+                            f,
+                            *pos,
+                            format!("`{}` charges in {}, but this limit is in {}.", full, max.currency, limit.currency),
+                            format!("Write the limit in {}.", max.currency),
+                        ),
+                        Some(_) => {}
+                    },
                     Cond::Times(n, pos) => {
                         if *n < 1 {
                             self.diag(

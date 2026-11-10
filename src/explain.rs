@@ -11,7 +11,7 @@ fn doc(d: &Option<String>) -> &str {
     d.as_deref().unwrap_or("(no description)")
 }
 
-fn effect_words(a: &Action) -> String {
+pub fn effect_words(a: &Action) -> String {
     if !a.is_acting() {
         return "only read".into();
     }

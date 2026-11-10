@@ -1,0 +1,49 @@
+// Contracts for the gate tests. They exercise every kind of condition.
+
+enum Size { small, large }
+type Item  { id: Text  size: Size  note: Untrusted<Text>?  price: Money }
+type Order { id: Text  item: Item }
+
+"A shop."
+interface Shop {
+  "List what is for sale."
+  action items() -> List<Item>
+    effects: read
+
+  "Buy an item."
+  action buy(item: Item, qty: Int, gift: Bool?) -> Order
+    effects: write, spend
+    undo: refund within 1h
+
+  "Return an order and get the money back."
+  action refund(order: Order)
+    effects: write
+
+  "Close the account for good."
+  action close()
+    effects: write
+
+  "Tip the staff."
+  action tip(amount: Money)
+    effects: spend
+}
+
+"A corner shop. No sale is above R300."
+service Corner implements Shop {
+  "Buy an item. Never more than R300."
+  action buy(item: Item, qty: Int, gift: Bool?) -> Order
+    effects: write, spend(max: 300 ZAR)
+    undo: refund within 1h
+}
+
+"A shop the grant does not cover."
+service Other implements Shop { }
+
+"Shop for the week."
+grant Weekly {
+  allow Shop.items
+  allow Shop.buy where spend <= 500 ZAR, times <= 3, qty <= 2, service in ["shop.example/corner"]
+  ask Shop.close
+  ask Shop.tip where spend <= 50 ZAR
+  expires 2026-12-01T00:00Z
+}

@@ -16,6 +16,7 @@ Remit claims to be better than what exists. Each claim here is measured against 
 | --- | --- | --- |
 | [describe-a-service](describe-a-service) | How much text does it take to tell an agent what a service does? | First result, one service. Remit is 2.7 to 4.4 times smaller |
 | [write-a-service](write-a-service) | Can a model write a correct description first try, given only the specification? | First result, six services, two models. A tie on correctness; Remit answers are much smaller but the specification costs input tokens |
+| [resist-injection](resist-injection) | Which guard stops the harm when an agent is told to do harm? | First result, one scenario, nine attacks. With a hijacked agent, Remit blocks 7 of 9, equal to a hand-written guard and ahead of stateless MCP guards (2 or 3 of 9). With two real models, no attack was attempted under any guard: a tie |
 
 ## Planned
 
@@ -23,4 +24,5 @@ Remit claims to be better than what exists. Each claim here is measured against 
 | --- | --- |
 | How many model turns does a task take? | Direct tool calling over MCP |
 | What does it cost to authorise one call? | An OAuth token check against an authorisation server |
-| Which attacks get through? | A conventional service with the same features, against a public attack suite |
+| Which attacks get through an implementation's bounds? | A conventional service with the same features, against a public attack suite |
+| Do attacks that adapt to the model get through? | The guards in resist-injection, with a published attack suite and models from other vendors |

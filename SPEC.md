@@ -2,7 +2,7 @@
 
 This is the whole language. It must stay under 8,000 tokens.
 
-Status: draft. Version 0 will change without notice. The checker in this repository implements every rule below except R12, and does not yet fetch addresses from a host.
+Status: draft. Version 0 will change without notice. The checker in this repository implements every rule below except R12, and does not yet fetch addresses from a host. The gate in this repository enforces grants as section 14 describes.
 
 ## 1. What a contract is
 
@@ -241,25 +241,55 @@ grant FridayDinner {
 
 Every error is reported as structured data: code, location, the rule in one sentence, and a suggested fix.
 
-## 14. What is guaranteed, and by what
+## 14. Enforcement
+
+The gate stands between an agent and the services, and trusts neither. It answers every call with allow, ask, or deny.
+
+A call is allowed when the grant is live, a rule covers the action on that service, and every condition of that rule holds. Rules are tried in the order written. The first that permits the call counts it.
+
+- **Arguments** must fit the action's parameters. Unknown names are refused.
+- **`times <=`** counts every call the gate lets through, including calls that then fail.
+- **Spending.** A service takes money only by asking the gate during a call. The gate permits at most the lower of the action's `max` and what is left of the rule's `spend <=`. Money reserved by a call in progress is not available to another call. A refund does not restore a limit.
+- **Undo.** When a granted call returns, the gate remembers its result. The undo action is then allowed once, with exactly that result, inside the `within` period.
+- **Results** reach the agent holding only the fields the action declares, with every `Untrusted` part listed. A result that does not fit is withheld.
+- **`ask`.** The gate writes what the person is shown, from the contract's descriptions and the call's arguments. Limits are checked again when the person answers.
+- An expired or revoked grant permits nothing, including undo.
+
+Values are JSON. Money is a string such as `"500 ZAR"` and is never negative. Duration, Date, and DateTime are strings in their literal forms. An enum value is its member's name. An object may not repeat a key.
+
+| Code | The gate refuses because |
+| --- | --- |
+| G01 | The grant has ended or was revoked |
+| G02 | No rule in the grant covers this call |
+| G03 | The arguments do not fit the action |
+| G04 | A condition of the rule does not hold |
+| G05 | The rule's call limit is used up |
+| G06 | A spending limit would be exceeded |
+| G07 | The person declined |
+| G08 | The call is unknown or finished, or its result does not fit |
+
+## 15. What is guaranteed, and by what
 
 | Guarantee | Version 0 |
 | --- | --- |
 | A contract is well formed and its names resolve | Proven by the checker |
 | A service's declared bounds fit inside its interface's | Proven by the checker |
 | A grant refers only to real actions and acknowledges irreversibility | Proven by the checker |
-| An implementation stays inside its declared effects and `uses` | **Not enforced.** Needs the runtime |
-| A grant's limits hold at call time | **Not enforced.** Needs the runtime |
-| A spend amount is what the service says it is | **Not enforced.** Needs runtime-mediated payment |
+| An implementation stays inside its declared effects and `uses` | **Not enforced**, except that only an action declaring `spend` can charge through the gate |
+| A grant's limits hold at call time, whatever the agent asks for | Enforced by the gate. Tested, not yet proven |
+| A service takes no more money than the grant allows | Enforced by the gate, when payment goes through it |
+| An agent does the right thing inside its grant | **Not covered.** A grant bounds harm. It does not choose well |
 | A service marks third-party content `Untrusted` | **Not covered.** A service can omit the mark |
 | A service is honest, or is who it says it is | **Not covered** |
 
 Because a service can omit the mark, a caller must treat everything a service returns as data, never as instruction. `Untrusted` adds a narrower, checkable fact: this content can never be passed where trusted content is required.
 
-## 15. Not in version 0
+## 16. Not in version 0
 
 - Implementation code. Implementations are written in existing languages.
 - Undo periods that depend on data, such as "until two hours before the booking".
 - Generic types other than `List` and `Untrusted`.
 - A marker for personal data.
 - Who holds a grant, and the format it travels in.
+- Conditions on fields inside a parameter, such as `slot.start`.
+- Gate state that survives a restart.

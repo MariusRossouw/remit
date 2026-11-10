@@ -6,15 +6,15 @@ Milestones have exit criteria, not dates. Each one must be useful without the ne
 
 | Goal | Target |
 | --- | --- |
-| Learnable in one read | The full language specification fits in 8,000 tokens. Currently about 4,000 |
+| Learnable in one read | The full language specification fits in 8,000 tokens. Currently about 4,800 by the highest count we have measured |
 | Agents succeed without training | An agent given only the specification writes a valid contract first try on 90% of a public task suite. First result: 24 of 24 on an easy suite ([write-a-service](../bench/write-a-service)) |
-| Safe unread | No implementation in a public red-team suite exceeds its granted capabilities |
+| Safe unread | No implementation in a public red-team suite exceeds its granted capabilities. First result, for agents not implementations: [resist-injection](../bench/resist-injection) |
 | Minutes, not weeks | From a one-sentence idea to a running, bounded service in under ten minutes |
 | Plain-language consent | People shown a generated permission prompt can correctly say what they approved |
 | Cheap to read | The same service costs fewer tokens to describe as a Remit contract than as MCP tool definitions or OpenAPI, measured and published |
 | Known interfaces cost nothing | A service implementing an interface the agent has already seen is described by a hash and its additions |
 | Few round trips | Benchmark tasks finish in a published number of model turns, and the number falls over time |
-| Enforcement is cheap | Authorising a call needs no network request and adds under a millisecond |
+| Enforcement is cheap | Authorising a call needs no network request and adds under a millisecond. Measured: about 2 microseconds inside the gate, not yet compared with an alternative |
 | Proven, not asserted | The core guarantees are stated as theorems and machine-checked, with the trusted parts listed |
 
 The targets are first guesses. The measures are what matter.
@@ -45,10 +45,11 @@ This milestone answers the adoption risk: nobody has to switch languages to bene
 
 ### M2: Enforced bounds
 
+- A gate that enforces a grant at call time, whatever the agent asks for. Built ([Design 0002](design/0002-the-gate.md)); state is in memory and it is tested, not proven.
 - Implementations run as Wasm components holding only the capabilities the contract grants.
 - A grant format that each hop can narrow but never widen, built on existing token work.
 - An audit log with the chain of authority.
-- A public red-team suite.
+- A public red-team suite. Started: [resist-injection](../bench/resist-injection).
 - Machine-checked proofs of the M1 statements, and a written list of what must be trusted for them to hold.
 - **Exit:** the compromised dependency and the over-limit booking from the scenario both fail, demonstrably.
 

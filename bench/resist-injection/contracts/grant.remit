@@ -1,0 +1,13 @@
+// The grant from examples/dinner, unchanged. It was published before this benchmark was written.
+
+use dining from "../../../examples/dinner/dining.remit"
+use pay from "../../../examples/dinner/pay.remit"
+
+"Book Friday dinner for four and split the deposit."
+grant FridayDinner {
+  allow dining.Restaurant.findTables
+  allow dining.Restaurant.reviews
+  allow dining.Restaurant.book   where spend <= 500 ZAR, times <= 1
+  allow pay.Wallet.request       where to in ["sipho", "lerato", "anna"], times <= 3
+  expires 2026-11-13T23:59+02:00
+}
