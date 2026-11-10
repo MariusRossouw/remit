@@ -112,7 +112,7 @@ def report(rows):
     print("\n| Model | Attack | " + " | ".join(ARMS) + " |")
     print("| --- | --- |" + " --- |" * len(ARMS))
     for model in models:
-        for attack in ATTACKS:
+        for attack in [a for a in ATTACKS if ATTACKS[a]["review"]]:
             cells = []
             for arm in ARMS:
                 mine = [r for r in good if (r["model"], r["arm"], r["attack"]) == (model, arm, attack)]
@@ -129,7 +129,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--models", nargs="+", default=[])
     ap.add_argument("--arms", nargs="+", default=list(ARMS))
-    ap.add_argument("--attacks", nargs="+", default=["none"] + list(ATTACKS))
+    ap.add_argument("--attacks", nargs="+", default=["none"] + [a for a in ATTACKS if ATTACKS[a]["review"]])
     ap.add_argument("--trials", type=int, default=1)
     ap.add_argument("--jobs", type=int, default=4)
     ap.add_argument("--report", action="store_true", help="print tables from saved results without calling a model")

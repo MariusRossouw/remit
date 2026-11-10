@@ -511,13 +511,15 @@ impl<'w> Gate<'w> {
                         return deny("G04", format!("This rule covers only the services {}.", list.show()));
                     }
                 }
-                Cond::Param { name, op, value } => {
-                    let holds = action.params.iter().find(|p| p.name.name == name.name).is_some_and(|p| {
-                        match (self.w.resolve_type(file, &p.ty).ty, args.get(&name.name)) {
-                            (Ty::Scalar(s), Some(arg)) => cond_holds(s, *op, value, arg),
-                            _ => false,
-                        }
-                    });
+                Cond::Param { name, path, op, value } => {
+                    let mut arg = args.get(&name.name);
+                    for seg in path {
+                        arg = arg.and_then(|v| v.get(&seg.name));
+                    }
+                    let holds = match (self.w.cond_type(file, action, name, path).map(|t| t.ty), arg) {
+                        (Ok(Ty::Scalar(s)), Some(arg)) => cond_holds(s, *op, value, arg),
+                        _ => false,
+                    };
                     if !holds {
                         let words = match op {
                             Op::Eq => "be",
@@ -525,10 +527,10 @@ impl<'w> Gate<'w> {
                             Op::Ge => "be at least",
                             Op::In => "be one of",
                         };
-                        let got = args.get(&name.name).map(|v| v.text()).unwrap_or_else(|| "nothing".into());
+                        let got = arg.map(|v| v.text()).unwrap_or_else(|| "nothing".into());
                         return deny(
                             "G04",
-                            format!("This grant requires `{}` to {} {}. The call has {}.", name.name, words, value.show(), got),
+                            format!("This grant requires `{}` to {} {}. The call has {}.", Cond::shown(name, path), words, value.show(), got),
                         );
                     }
                 }
@@ -657,8 +659,10 @@ impl<'w> Gate<'w> {
         out.push_str(&format!("  action: {}.{}\n", service, act.name.name));
         out.push_str(&format!("  with:   {}\n", args.text()));
         out.push_str(&format!("  may:    {}\n", crate::explain::effect_words(act)));
-        if let Some(r) = Self::show_reserve(reserve) {
-            out.push_str(&format!("  charge: at most {}\n", r));
+        match Self::show_reserve(reserve) {
+            Some(r) => out.push_str(&format!("  charge: at most {}\n", r)),
+            None if act.effect(EffectKind::Spend).is_some() => out.push_str("  charge: NO LIMIT\n"),
+            None => {}
         }
         if act.is_acting() {
             match &act.undo {

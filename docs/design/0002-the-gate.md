@@ -48,16 +48,20 @@ The other requests are `confirm`, `result`, `fail`, `revoke`, and `state`.
 
 ## What this does not do
 
-- **It is tested, not proven.** There are 16 tests, including 400 random agents checked against an independent record. Six bugs planted in the gate were each caught by that test. A machine-checked proof is still the goal.
+- **It is tested, not proven.** There are 18 tests, including 400 random agents checked against an independent record. Six bugs planted in the gate were each caught by that test. A machine-checked proof is still the goal.
 - **It does not confine implementations.** A service can still do anything its own process can do. The one exception is money, when payment goes through the gate.
-- **It does not choose well inside the grant.** A hijacked agent can still do anything the grant permits. The [benchmark](../../bench/resist-injection) shows two attacks of this kind succeeding.
+- **It does not choose well inside the grant.** A hijacked agent can still do anything the grant permits. The [benchmark](../../bench/resist-injection) shows attacks of this kind succeeding.
 - **`Untrusted` is labelled, not tracked.** The gate reports which parts of a result are untrusted. It does not follow that content through the agent.
 - **State is in memory.** A restart forgets the counts.
 - **The host is trusted.** It supplies the time, shows the person the prompts, and must route every call and every payment through the gate.
 
 ## Open points
 
-1. **Unbounded spending.** If neither the grant nor the action sets a ceiling, the gate permits any charge. Proposed rule: an `allow` on a spending action must carry `spend <=`, as an irreversible action must carry `irreversible`.
-2. **Conditions on fields inside a parameter.** `slot.start == 2026-11-13T19:00+02:00` would have stopped the wrong-slot attack. The language allows conditions only on top-level parameters.
-3. **Durable state and the grant's holder.** Where counts live, and how a grant is bound to one agent.
-4. **Calls that fail honestly.** Whether a call that failed before charging should give its count back.
+1. **Arguments are claims.** A condition is checked against what the agent sent. A service that goes by an id can be sent an id for one thing and a description of another. The [benchmark](../../bench/resist-injection) has an attack that beats every guard this way. Proposed: let a contract say that a parameter must be a value the service itself returned, which the gate can check because it sees every result.
+2. **Durable state and the grant's holder.** Where counts live, and how a grant is bound to one agent.
+3. **Calls that fail honestly.** Whether a call that failed before charging should give its count back.
+
+## Closed since the first version
+
+- **Unbounded spending.** An `allow` rule on a spending action must now carry `spend <=` (rule R15). An `ask` rule may omit it, and the prompt then says there is no limit.
+- **Conditions inside a parameter.** `slot.start == 2026-11-13T19:00+02:00` is now allowed, through record types only.

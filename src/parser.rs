@@ -625,6 +625,11 @@ impl<'a> Parser<'a> {
             }
             _ => {
                 let name = Ident { name, pos: self.next().pos };
+                let mut path = Vec::new();
+                while *self.peek() == Tok::Dot {
+                    self.next();
+                    path.push(self.lower("a field")?);
+                }
                 let op = match self.peek().clone() {
                     Tok::EqEq => Op::Eq,
                     Tok::Le => Op::Le,
@@ -634,7 +639,7 @@ impl<'a> Parser<'a> {
                 };
                 self.next();
                 let value = self.literal()?;
-                Ok(Cond::Param { name, op, value })
+                Ok(Cond::Param { name, path, op, value })
             }
         }
     }

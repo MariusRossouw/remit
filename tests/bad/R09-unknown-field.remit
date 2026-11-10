@@ -1,0 +1,19 @@
+type Slot { id: Text  start: DateTime }
+
+"A restaurant."
+service Bistro {
+  "Reserve a table."
+  action book(slot: Slot) -> Text
+    effects: write
+    undo: cancel
+
+  "Cancel a booking."
+  action cancel(booking: Text)
+    effects: write
+}
+
+"Book dinner."
+grant Dinner {
+  allow Bistro.book where slot.begin == 2026-11-13T19:00+02:00
+  expires 2026-11-13T23:59+02:00
+}

@@ -33,6 +33,7 @@ pub fn rule(code: &str) -> &'static str {
         "R12" => "A fetched file does not match remit.lock.",
         "R13" => "Files use each other in a cycle.",
         "R14" => "A name collides with a built-in.",
+        "R15" => "An `allow` rule covers an action that spends without `spend <=`.",
         "T01" => "This checker does not support this yet.",
         _ => "",
     }

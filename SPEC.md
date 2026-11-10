@@ -99,7 +99,7 @@ cond      = "spend" "<=" money
           | "times" "<=" int
           | "service" "in" list
           | "irreversible"
-          | name ( "==" | "<=" | ">=" | "in" ) literal ;
+          | name { "." name } ( "==" | "<=" | ">=" | "in" ) literal ;
 
 doc       = string ;
 ```
@@ -213,9 +213,11 @@ grant FridayDinner {
 - `spend <=` is a total across the life of the grant, not per call.
 - `times <=` is the number of calls permitted.
 - `service in` restricts the rule to services at the listed addresses.
-- Any other condition compares a parameter of the action with a literal.
+- Any other condition compares a parameter of the action with a literal. `slot.start` reaches a field inside a parameter. It can pass through record types only.
 - A grant to call an action includes the right to call its undo on results that grant produced.
 - Every grant expires.
+
+**Spending.** An `allow` rule for an action that spends is an error unless it carries `spend <=`.
 
 **Irreversible actions.** An `allow` rule for an acting action with no undo is an error unless it carries the condition `irreversible`. The person must either be asked each time or have accepted, in the grant, that the action cannot be reversed.
 
@@ -238,6 +240,7 @@ grant FridayDinner {
 | R12 | A fetched file does not match `remit.lock` |
 | R13 | Files use each other in a cycle |
 | R14 | A name collides with a built-in |
+| R15 | An `allow` rule covers an action that spends without `spend <=` |
 
 Every error is reported as structured data: code, location, the rule in one sentence, and a suggested fix.
 
@@ -274,11 +277,12 @@ Values are JSON. Money is a string such as `"500 ZAR"` and is never negative. Du
 | --- | --- |
 | A contract is well formed and its names resolve | Proven by the checker |
 | A service's declared bounds fit inside its interface's | Proven by the checker |
-| A grant refers only to real actions and acknowledges irreversibility | Proven by the checker |
+| A grant refers only to real actions, acknowledges irreversibility, and caps what it lets an agent spend unasked | Proven by the checker |
 | An implementation stays inside its declared effects and `uses` | **Not enforced**, except that only an action declaring `spend` can charge through the gate |
 | A grant's limits hold at call time, whatever the agent asks for | Enforced by the gate. Tested, not yet proven |
 | A service takes no more money than the grant allows | Enforced by the gate, when payment goes through it |
 | An agent does the right thing inside its grant | **Not covered.** A grant bounds harm. It does not choose well |
+| A service acts on the arguments it was given | **Not covered.** A condition holds for what the agent sent, not for what the service then does |
 | A service marks third-party content `Untrusted` | **Not covered.** A service can omit the mark |
 | A service is honest, or is who it says it is | **Not covered** |
 
@@ -291,5 +295,4 @@ Because a service can omit the mark, a caller must treat everything a service re
 - Generic types other than `List` and `Untrusted`.
 - A marker for personal data.
 - Who holds a grant, and the format it travels in.
-- Conditions on fields inside a parameter, such as `slot.start`.
 - Gate state that survives a restart.

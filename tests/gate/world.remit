@@ -47,3 +47,10 @@ grant Weekly {
   ask Shop.tip where spend <= 50 ZAR
   expires 2026-12-01T00:00Z
 }
+
+"Buy one particular thing."
+grant Exact {
+  allow Shop.buy where spend <= 300 ZAR, item.id == "i1", item.price <= 150 ZAR
+  ask Shop.tip
+  expires 2026-12-01T00:00Z
+}

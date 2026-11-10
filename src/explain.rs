@@ -23,7 +23,7 @@ pub fn effect_words(a: &Action) -> String {
             EffectKind::Send => parts.push("contact others on your behalf".to_string()),
             EffectKind::Spend => parts.push(match &e.max {
                 Some(m) => format!("take payment, up to {} per call", m.text),
-                None => "take payment".to_string(),
+                None => "take payment, with no ceiling per call".to_string(),
             }),
         }
     }
@@ -37,12 +37,15 @@ fn cond_words(c: &Cond) -> Option<String> {
         Cond::Times(n, _) => format!("at most {} calls", n),
         Cond::Service(list, _) => format!("only at {}", list_words(list)),
         Cond::Irreversible(_) => return None,
-        Cond::Param { name, op, value } => match op {
-            Op::Eq => format!("`{}` is {}", name.name, value.show()),
-            Op::Le => format!("`{}` is at most {}", name.name, value.show()),
-            Op::Ge => format!("`{}` is at least {}", name.name, value.show()),
-            Op::In => format!("`{}` is one of {}", name.name, list_words(value)),
-        },
+        Cond::Param { name, path, op, value } => {
+            let what = Cond::shown(name, path);
+            match op {
+                Op::Eq => format!("`{}` is {}", what, value.show()),
+                Op::Le => format!("`{}` is at most {}", what, value.show()),
+                Op::Ge => format!("`{}` is at least {}", what, value.show()),
+                Op::In => format!("`{}` is one of {}", what, list_words(value)),
+            }
+        }
     })
 }
 

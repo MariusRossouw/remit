@@ -303,7 +303,20 @@ pub enum Cond {
     Times(i64, Pos),
     Service(Literal, Pos),
     Irreversible(Pos),
-    Param { name: Ident, op: Op, value: Literal },
+    /// `name` is a parameter. `path` names fields inside it, outermost first.
+    Param { name: Ident, path: Vec<Ident>, op: Op, value: Literal },
+}
+
+impl Cond {
+    /// `slot.start` for a condition on a field, or `party` for one on a parameter.
+    pub fn shown(name: &Ident, path: &[Ident]) -> String {
+        let mut out = name.name.clone();
+        for p in path {
+            out.push('.');
+            out.push_str(&p.name);
+        }
+        out
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

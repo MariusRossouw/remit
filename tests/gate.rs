@@ -23,6 +23,32 @@ fn gate(w: &World) -> Gate<'_> {
     Gate::new(w, 0, "Weekly", vec![bind("corner", "Corner"), bind("other", "Other")]).unwrap()
 }
 
+fn exact(w: &World) -> Gate<'_> {
+    let corner = Binding { name: "corner".into(), address: "shop.example/corner".into(), file: 0, service: "Corner".into() };
+    Gate::new(w, 0, "Exact", vec![corner]).unwrap()
+}
+
+#[test]
+fn conditions_can_look_inside_a_parameter() {
+    let w = world();
+    let mut g = exact(&w);
+    let buy = |item: &str| j(&format!(r#"{{"item":{},"qty":1}}"#, item));
+    assert_eq!(code(g.call("corner", "buy", &buy(r#"{"id":"i2","size":"small","price":"120 ZAR"}"#), now())), "G04");
+    assert_eq!(code(g.call("corner", "buy", &buy(r#"{"id":"i1","size":"small","price":"151 ZAR"}"#), now())), "G04");
+    assert_eq!(code(g.call("corner", "buy", &buy(r#"{"id":"i1","size":"small","price":"120 USD"}"#), now())), "G04");
+    allowed(g.call("corner", "buy", &buy(ITEM), now()));
+}
+
+#[test]
+fn an_asked_call_with_no_ceiling_says_so() {
+    let w = world();
+    let mut g = exact(&w);
+    match g.call("corner", "tip", &j(r#"{"amount":"20 ZAR"}"#), now()) {
+        Decision::Ask { prompt, .. } => assert!(prompt.contains("charge: NO LIMIT"), "{}", prompt),
+        other => panic!("{:?}", other),
+    }
+}
+
 fn at(s: &str) -> i64 {
     parse_datetime(s).unwrap()
 }

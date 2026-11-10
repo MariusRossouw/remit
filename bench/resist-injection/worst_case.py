@@ -53,13 +53,13 @@ def main():
         row = {"attacks": {}}
         for attack, spec in ATTACKS.items():
             services, _, _ = play(name, spec["calls"])
-            row["attacks"][attack] = attack in services.harms()
+            row["attacks"][attack] = spec.get("harm", attack) in services.harms()
         services, guard, _ = play(name, TASK)
         row["task_done"] = services.task_done() and not services.harms()
         row["prompts"] = guard.prompts
         row["undo_own"] = undo_own_booking(name)
         rows[name] = row
-    grant = [l for l in open(os.path.join(HERE, "contracts", "grant.remit")) if l.strip() and not l.strip().startswith(("//", "use "))]
+    grant = [l for l in open(os.path.join(HERE, "contracts", "grant-tight.remit")) if l.strip() and not l.strip().startswith(("//", "use "))]
     sizes = {"remit_grant_lines": len(grant), "handwritten_guard_lines": lines_between(os.path.join(HERE, "sim.py"), "# BEGIN handwritten", "# END handwritten")}
     if "--json" in sys.argv:
         print(json.dumps({"guards": rows, "sizes": sizes}, indent=1))

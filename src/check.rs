@@ -319,6 +319,41 @@ impl World {
         r
     }
 
+    /// The type a condition compares: a parameter, or a field reached through records.
+    /// Err carries where it went wrong, whether a name was missing, the message and the fix.
+    pub fn cond_type(&self, file: usize, action: &Action, name: &Ident, path: &[Ident]) -> Result<RTy, (Pos, bool, String, String)> {
+        let Some(param) = action.params.iter().find(|p| p.name.name == name.name) else {
+            let fix = suggest(
+                &name.name,
+                action.params.iter().map(|p| p.name.name.as_str()),
+                "Use one of the action's parameters, or `spend`, `times`, `service`, `irreversible`.",
+            );
+            return Err((name.pos, true, format!("`{}` has no parameter called `{}`.", action.name.name, name.name), fix));
+        };
+        let mut ty = self.resolve_type(file, &param.ty);
+        let mut at = name.name.clone();
+        for seg in path {
+            let Ty::Record(rf, rn) = &ty.ty else {
+                return Err((
+                    seg.pos,
+                    false,
+                    format!("`{}` is not a record, so it has no field `{}`.", at, seg.name),
+                    "A condition can look inside record types only, not lists or plain values.".into(),
+                ));
+            };
+            let Some(decl) = self.record(*rf, rn) else {
+                return Ok(RTy { ty: Ty::Unknown, optional: false, untrusted: false });
+            };
+            let Some(field) = decl.fields.iter().find(|x| x.name.name == seg.name) else {
+                let fix = suggest(&seg.name, decl.fields.iter().map(|x| x.name.name.as_str()), &format!("`{}` has these fields: {}.", rn, decl.fields.iter().map(|x| x.name.name.clone()).collect::<Vec<_>>().join(", ")));
+                return Err((seg.pos, true, format!("`{}` has no field called `{}`.", rn, seg.name), fix));
+            };
+            ty = self.resolve_type(*rf, &field.ty);
+            at = format!("{}.{}", at, seg.name);
+        }
+        Ok(ty)
+    }
+
     fn record(&self, f: usize, name: &str) -> Option<&TypeDecl> {
         match self.find_decl(f, name) {
             Some(Decl::Type(t)) => Some(t),
@@ -1002,38 +1037,37 @@ impl<'a> Ctx<'a> {
                             );
                         }
                     }
-                    Cond::Param { name, op, value } => {
-                        let Some(param) = action.params.iter().find(|p| p.name.name == name.name) else {
-                            let fix = suggest(
-                                &name.name,
-                                action.params.iter().map(|p| p.name.name.as_str()),
-                                "Use one of the action's parameters, or `spend`, `times`, `service`, `irreversible`.",
-                            );
-                            self.diag(
-                                "R09",
-                                f,
-                                name.pos,
-                                format!("`{}` has no parameter called `{}`.", full, name.name),
-                                fix,
-                            );
-                            continue;
+                    Cond::Param { name, path, op, value } => {
+                        let ty = match w.cond_type(found.file, action, name, path) {
+                            Ok(ty) => ty,
+                            Err((pos, missing, message, fix)) => {
+                                let message = if path.is_empty() { format!("`{}` has no parameter called `{}`.", full, name.name) } else { message };
+                                self.diag(if missing { "R09" } else { "R10" }, f, pos, message, fix);
+                                continue;
+                            }
                         };
-                        let ty = w.resolve_type(found.file, &param.ty);
                         if let Err(fix) = cond_fits(&ty, *op, value) {
+                            let what = Cond::shown(name, path);
                             self.diag(
                                 "R10",
                                 f,
                                 name.pos,
-                                format!(
-                                    "The parameter `{}` has type `{}`, which this condition does not fit.",
-                                    name.name,
-                                    param.ty.show()
-                                ),
+                                format!("`{}` has a type this condition does not fit.", what),
                                 fix,
                             );
                         }
                     }
                 }
+            }
+            let limited = rule.conds.iter().any(|c| matches!(c, Cond::Spend(..)));
+            if !rule.ask && action.effect(EffectKind::Spend).is_some() && !limited {
+                self.diag(
+                    "R15",
+                    f,
+                    rule.pos,
+                    format!("`{}` can take payment, and this rule sets no total.", full),
+                    "Add a total such as `spend <= 500 ZAR`, or change `allow` to `ask` so the person confirms each call.".into(),
+                );
             }
             if !rule.ask && action.is_acting() && action.undo.is_none() && !accepted_irreversible {
                 self.diag(
