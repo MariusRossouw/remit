@@ -61,6 +61,7 @@ The implementation behind the contract can be written by an agent and never read
 - [The dinner scenario](docs/scenario.md): one use case worked end to end.
 - [Positioning](docs/positioning.md): what exists already and where Remit fits.
 - [Roadmap](docs/roadmap.md): goals, milestones, and how we reach agents and new builders.
+- [Design 0001: Shared vocabularies](docs/design/0001-shared-vocabularies.md): who defines `Restaurant`, and why a grant against it is safe.
 
 ## Contributing
 

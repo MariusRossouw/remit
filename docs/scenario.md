@@ -92,7 +92,7 @@ Thandi can read it, revoke the grant, or cancel the booking from the log.
 
 ## Design questions this raises
 
-1. **Shared vocabularies.** The grant names `Restaurant.book`, not `Bistro.book`. Who defines `Restaurant`, and how do services declare they implement it?
+1. **Shared vocabularies.** The grant names `Restaurant.book`, not `Bistro.book`. Who defines `Restaurant`, and how do services declare they implement it? Proposed answer: [Design 0001](design/0001-shared-vocabularies.md).
 2. **Grant format.** What carries the capability across hops so that each hop can only narrow it? Existing token work (Biscuit, macaroons, OAuth token exchange) should be reused where possible.
 3. **Compile time versus run time.** Which bounds can the checker prove, and which must the runtime enforce?
 4. **Presenting untrusted content to a model.** What does the runtime hand the model so that provenance survives?

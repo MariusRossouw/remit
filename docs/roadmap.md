@@ -25,7 +25,8 @@ The targets are first guesses. The measures are what matter.
 
 The smallest thing that is useful alone.
 
-- Grammar for services, actions, effects, views, and `Untrusted`.
+- Grammar for interfaces, services, actions, effects, views, and `Untrusted`.
+- Conformance checking: a service may do less than the interface it implements, never more ([Design 0001](design/0001-shared-vocabularies.md)).
 - A checker with machine-readable errors and suggested fixes.
 - Emitters: an MCP server skeleton and a plain-language permission summary.
 - Implementations are written in an existing language for now.
