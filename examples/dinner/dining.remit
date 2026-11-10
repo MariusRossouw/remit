@@ -16,7 +16,7 @@ interface Restaurant {
     effects: read
 
   "Reserve a table. May take a deposit."
-  action book(slot: Slot, guest: Contact) -> Booking
+  action book(slot: Returned<Slot>, guest: Contact) -> Booking
     effects: write, spend
     undo: cancel
 

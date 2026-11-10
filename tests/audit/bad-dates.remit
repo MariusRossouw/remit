@@ -1,0 +1,14 @@
+// Dates that do not exist. `remit check` accepts both.
+
+"A diary."
+service Diary {
+  "Write an entry."
+  action write(day: Date)
+    effects: write
+}
+
+"Write on a day that does not exist, until a time that does not exist."
+grant Never {
+  allow Diary.write where day == 2026-02-30, irreversible
+  expires 2026-02-31T00:00Z
+}

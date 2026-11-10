@@ -99,7 +99,7 @@ pub fn explain(w: &World, f: usize) -> String {
                                 Some(d) => format!(" (within {})", d.text),
                                 None => String::new(),
                             };
-                            out.push_str(&format!("      undo:   {}{}\n", undo_doc, period));
+                            out.push_str(&format!("      undo:   {}{} The agent may do this itself.\n", undo_doc, period));
                         }
                         None => out.push_str("      undo:   CANNOT BE UNDONE\n"),
                     }

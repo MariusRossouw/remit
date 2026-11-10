@@ -9,10 +9,8 @@ Milestones have exit criteria, not dates. Each one must be useful without the ne
 | Learnable in one read | The full language specification fits in 8,000 tokens. Currently about 4,800 by the highest count we have measured |
 | Agents succeed without training | An agent given only the specification writes a valid contract first try on 90% of a public task suite. First result: 24 of 24 on an easy suite ([write-a-service](../bench/write-a-service)) |
 | Safe unread | No implementation in a public red-team suite exceeds its granted capabilities. First result, for agents not implementations: [resist-injection](../bench/resist-injection) |
-| Minutes, not weeks | From a one-sentence idea to a running, bounded service in under ten minutes |
 | Plain-language consent | People shown a generated permission prompt can correctly say what they approved |
 | Cheap to read | The same service costs fewer tokens to describe as a Remit contract than as MCP tool definitions or OpenAPI, measured and published |
-| Known interfaces cost nothing | A service implementing an interface the agent has already seen is described by a hash and its additions |
 | Few round trips | Benchmark tasks finish in a published number of model turns, and the number falls over time |
 | Enforcement is cheap | Authorising a call needs no network request and adds under a millisecond. Measured: about 2 microseconds inside the gate, not yet compared with an alternative |
 | Proven, not asserted | The core guarantees are stated as theorems and machine-checked, with the trusted parts listed |
@@ -23,73 +21,49 @@ Every target is measured against the strongest existing alternative, and the res
 
 ## Milestones
 
-### M0: Vision (now)
+The plan changed in November 2026 after an [outside review](reviews/0001-outside-review.md). The earlier plan built towards a full language and runtime. This one ships the part that is real and useful now, and treats the rest as research.
 
-- Principles, scenario, positioning, roadmap.
-- **Exit:** a stranger can read the README and explain the project back.
+### Done
 
-### M1: The contract language
+- A contract and grant language with a checker that explains each error ([SPEC.md](../SPEC.md)).
+- The gate, which enforces a grant at call time ([Design 0002](design/0002-the-gate.md)).
+- A plain-language summary of a grant.
+- Three benchmarks against existing alternatives ([bench](../bench/README.md)).
 
-The smallest thing that is useful alone.
+### S1: Usable in front of real tools
 
-- Grammar for types, interfaces, services, actions, effects, grants, and `Untrusted`. First draft: [SPEC.md](../SPEC.md).
-- Conformance checking: a service may do less than the interface it implements, never more ([Design 0001](design/0001-shared-vocabularies.md)).
-- A checker with machine-readable errors and suggested fixes. Built, in Rust; the lockfile and fetching from a host are still to do.
-- Emitters: an MCP server skeleton and a plain-language permission summary.
-- The safety claims written as precise statements: conformance bounds every implementer, authority only narrows, `Untrusted` never reaches a trusted position.
-- A token benchmark against MCP tool definitions and OpenAPI for the same services. First result: [describe-a-service](../bench/describe-a-service).
-- Implementations are written in an existing language for now.
-- **Exit:** the dinner scenario's contracts check, and an agent holding only the specification can write a new one.
+The smallest thing a team running agents could adopt.
 
-This milestone answers the adoption risk: nobody has to switch languages to benefit.
+- A proxy that sits in front of unmodified MCP servers and enforces a grant on every tool call.
+- A way to describe an existing MCP server's tools as a contract, starting from its tool list.
+- Counts and totals that survive a restart. A gate that cannot read its state refuses everything.
+- A record of every decision, with the rule that allowed or refused it.
+- **Exit:** the dinner scenario runs against real MCP servers that know nothing about Remit, and a restart in the middle loses nothing.
 
-### M2: Enforced bounds
+### S2: Evidence we did not write
 
-- A gate that enforces a grant at call time, whatever the agent asks for. Built ([Design 0002](design/0002-the-gate.md)); state is in memory and it is tested, not proven.
-- Implementations run as Wasm components holding only the capabilities the contract grants.
-- A grant format that each hop can narrow but never widen, built on existing token work.
-- An audit log with the chain of authority.
-- A public red-team suite. Started: [resist-injection](../bench/resist-injection).
-- Machine-checked proofs of the M1 statements, and a written list of what must be trusted for them to hold.
-- **Exit:** the compromised dependency and the over-limit booking from the scenario both fail, demonstrably.
+- Attacks written by other people after the language is frozen, run against the gate and published whatever the result.
+- A public agent-attack suite such as AgentDojo, with grants drafted by a model from each task's request, compared with published defences.
+- Models from at least three vendors, including an open one.
+- A study of whether people shown a grant's summary can say what they approved.
+- **Exit:** a result on a benchmark we did not design, with our losses listed.
 
-### M3: Projections
+### S3: Fit the standards
 
-- A human interface generated from a contract, in today's browsers.
-- A WebMCP emitter.
-- Provenance carried through to what a model is shown.
-- **Exit:** the dinner scenario runs end to end for a person and for an agent from the same source.
+- Grants and tool descriptions in a JSON form, with the current language as shorthand for it.
+- A proposal to carry task grants as an MCP extension, with this gate as the reference.
+- Spending enforced by the payment network: the gate issues a capped credential for each paying call, so a service never needs to ask the gate.
+- Results the gate signs, so "this value was returned by that service" survives restarts and travels between machines.
+- Grants that can be handed on and only narrowed.
+- **Exit:** a grant written once is enforced by two independent implementations.
 
-### M4: The implementation language
+### Research: untrusted content that cannot steer
 
-Only now, and only if M1 to M3 show that existing languages are the limit.
+The larger claim, "safe to run without reading it", needs more than a gate. It needs the agent's plan written in a small language whose interpreter tracks where every value came from, so content from outside provably cannot choose an action. This is where a new language is justified. It is hard, others are working on it, and it may not pay off. Nothing above depends on it.
 
-- Effects and capabilities checked inside implementations, not just at the boundary.
-- Built-in data sync.
-- **Exit:** a full service written by an agent, with no human-written implementation code, passes the red-team suite.
+## Who this is for first
 
-### M5: Money and discovery
-
-- Mapping `spend` onto existing agent payment protocols.
-- Shared vocabularies such as `Restaurant`, and a way to find services that implement them.
-
-## Reaching agents
-
-Agents pick tools that are in their context, work first try, and explain their failures. So:
-
-- Publish the specification as a single file sized for a context window, plus `llms.txt` and `AGENTS.md`.
-- Ship a skill or plugin for the main coding agents and an MCP server for the toolchain, so an agent can check and emit without leaving its session.
-- Publish the first-try success benchmark and keep it current. It is our advertisement to agents and to the people choosing for them.
-- Treat every confusing checker error as a bug.
-
-## Reaching new builders
-
-People building with agents and no engineering background are the first audience, not an afterthought.
-
-- One command from idea to running service.
-- Safe by default with no configuration. There is no unsafe mode to turn off.
-- A plain-language summary of what the thing they just built is able to do.
-- The pitch: you cannot leak your users' data by accident.
+Teams that already run agents against tools and need a budget per task: internal platforms, agent hosts, and wallets. They have a place to put a gate. People building with agents and no engineering background remain a goal, and they are reached through those hosts.
 
 ## Open source
 

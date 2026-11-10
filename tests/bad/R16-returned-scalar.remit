@@ -1,0 +1,12 @@
+type Slot { id: Text }
+
+"A restaurant."
+service Bistro {
+  "Find free tables."
+  action findTables() -> List<Slot>
+    effects: read
+
+  "Look at one table."
+  action show(id: Returned<Text>) -> Slot
+    effects: read
+}

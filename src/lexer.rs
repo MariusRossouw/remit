@@ -99,7 +99,14 @@ fn lex_date(c: &[char], i: usize, pos: Pos) -> Option<Result<(Tok, usize), LexEr
     }
     let month = two_digits(c, i + 5).unwrap();
     let day = two_digits(c, i + 8).unwrap();
-    if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+    let year: u32 = c[i..i + 4].iter().collect::<String>().parse().unwrap_or(0);
+    let leap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+    let last = match month {
+        4 | 6 | 9 | 11 => 30,
+        2 => 28 + leap as u32,
+        _ => 31,
+    };
+    if !(1..=12).contains(&month) || !(1..=last).contains(&day) {
         return Some(Err((
             pos,
             "This date has a month or day out of range.".into(),
@@ -216,6 +223,13 @@ fn lex_string(c: &[char], i: usize, pos: Pos) -> Result<(Tok, usize), LexError> 
                         "Only \\\" and \\\\ can follow a backslash in a string.".into(),
                     ));
                 }
+            }
+            ch if crate::diag::hidden(ch) => {
+                return Err((
+                    Pos { line: pos.line, col: pos.col + (j - i) as u32 },
+                    "This string holds a character that cannot be seen or that changes how text is shown.".into(),
+                    "Remove it. A string may hold only visible characters and spaces.".into(),
+                ));
             }
             ch => {
                 text.push(ch);

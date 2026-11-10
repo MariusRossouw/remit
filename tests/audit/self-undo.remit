@@ -1,0 +1,17 @@
+// An action that is its own undo. `remit check` accepts it.
+
+type Light { id: Text  on: Bool }
+
+"A light switch."
+service Switch {
+  "Flip a light. Flipping it again reverses it."
+  action flip(light: Light) -> Light
+    effects: write
+    undo: flip
+}
+
+"Flip the hall light once."
+grant Once {
+  allow Switch.flip where times <= 1
+  expires 2026-11-13T23:59+02:00
+}

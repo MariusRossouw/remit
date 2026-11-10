@@ -1,6 +1,6 @@
 # Design 0001: Shared vocabularies
 
-Status: proposed. Syntax follows [version 0 of the language](../../SPEC.md).
+Status: proposed, not built. No hashing, lockfile, or fetching exists yet; a grant and a service match an interface only when both load the same local file. Syntax follows [version 0 of the language](../../SPEC.md).
 
 ## The question
 
@@ -34,7 +34,7 @@ interface Restaurant {
     effects: read
 
   "Reserve a table. May take a deposit."
-  action book(slot: Slot, guest: Contact) -> Booking
+  action book(slot: Returned<Slot>, guest: Contact) -> Booking
     effects: write, spend
     undo: cancel
 

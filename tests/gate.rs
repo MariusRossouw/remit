@@ -49,6 +49,64 @@ fn an_asked_call_with_no_ceiling_says_so() {
     }
 }
 
+#[test]
+fn a_returned_parameter_takes_only_what_the_service_returned() {
+    let w = world();
+    let bind = |name: &str, service: &str| Binding { name: name.into(), address: name.into(), file: 0, service: service.into() };
+    let mut g = Gate::new(&w, 0, "Holding", vec![bind("corner", "Corner"), bind("other", "Other")]).unwrap();
+    let hold = |item: &str| j(&format!(r#"{{"item":{}}}"#, item));
+    let listed = r#"{"id":"i7","size":"large","note":"fresh","price":"80 ZAR"}"#;
+
+    // Nothing has been returned yet, so nothing can be passed.
+    assert_eq!(code(g.call("corner", "hold", &hold(listed), now())), "G09");
+
+    let (call, _) = allowed(g.call("corner", "items", &Value::Null, now()));
+    g.result(call, &j(&format!("[{}]", listed)), now()).unwrap();
+
+    // Changed in any field, it is no longer what the shop returned.
+    for changed in [
+        r#"{"id":"i8","size":"large","note":"fresh","price":"80 ZAR"}"#,
+        r#"{"id":"i7","size":"large","note":"fresh","price":"8 ZAR"}"#,
+        r#"{"id":"i7","size":"large","price":"80 ZAR"}"#,
+    ] {
+        assert_eq!(code(g.call("corner", "hold", &hold(changed), now())), "G09", "{}", changed);
+    }
+    // What one shop returned cannot be passed to another.
+    assert_eq!(code(g.call("other", "hold", &hold(listed), now())), "G09");
+    allowed(g.call("corner", "hold", &hold(listed), now()));
+
+    // A record inside a larger result counts too.
+    let (call, _) = allowed(g.call("corner", "buy", &buy_args(1), now()));
+    g.result(call, &order("o1"), now()).unwrap();
+    allowed(g.call("corner", "hold", &hold(ITEM), now()));
+}
+
+#[test]
+fn untrusted_content_never_counts_as_returned() {
+    let w = world();
+    let loud = Binding { name: "loud".into(), address: "loud".into(), file: 0, service: "Loud".into() };
+    let mut g = Gate::new(&w, 0, "Wary", vec![loud]).unwrap();
+    let planted = r#"{"id":"evil","size":"large","price":"5000 ZAR"}"#;
+    let (call, _) = allowed(g.call("loud", "flyers", &Value::Null, now()));
+    let d = g.result(call, &j(&format!(r#"[{{"text":"hi","offer":{}}}]"#, planted)), now()).unwrap();
+    assert_eq!(d.untrusted, vec!["/0/offer"]);
+    assert_eq!(code(g.call("loud", "hold", &j(&format!(r#"{{"item":{}}}"#, planted)), now())), "G09");
+}
+
+#[test]
+fn a_prompt_uses_the_words_the_person_approved_not_the_services() {
+    let w = world();
+    let loud = Binding { name: "loud".into(), address: "loud".into(), file: 0, service: "Loud".into() };
+    let mut g = Gate::new(&w, 0, "Wary", vec![loud]).unwrap();
+    match g.call("loud", "close", &Value::Null, now()) {
+        Decision::Ask { prompt, .. } => {
+            assert!(prompt.starts_with("Close the account for good."), "{}", prompt);
+            assert!(!prompt.contains("look around") && prompt.contains("the agent sent:"), "{}", prompt);
+        }
+        other => panic!("{:?}", other),
+    }
+}
+
 fn at(s: &str) -> i64 {
     parse_datetime(s).unwrap()
 }
@@ -106,14 +164,14 @@ fn a_charge_cannot_pass_the_ceiling_of_the_call() {
     let mut g = gate(&w);
     let (call, reserve) = allowed(g.call("corner", "buy", &buy_args(1), now()));
     assert_eq!(reserve.as_deref(), Some("300 ZAR"));
-    assert_eq!(g.charge(call, "301 ZAR").unwrap_err().code, "G06");
-    g.charge(call, "200 ZAR").unwrap();
-    assert_eq!(g.charge(call, "100.000001 ZAR").unwrap_err().code, "G06");
-    assert_eq!(g.charge(call, "50 USD").unwrap_err().code, "G06");
-    assert_eq!(g.charge(call, "-50 ZAR").unwrap_err().code, "G06");
-    g.charge(call, "100 ZAR").unwrap();
+    assert_eq!(g.charge(call, "301 ZAR", now()).unwrap_err().code, "G06");
+    g.charge(call, "200 ZAR", now()).unwrap();
+    assert_eq!(g.charge(call, "100.000001 ZAR", now()).unwrap_err().code, "G06");
+    assert_eq!(g.charge(call, "50 USD", now()).unwrap_err().code, "G06");
+    assert_eq!(g.charge(call, "-50 ZAR", now()).unwrap_err().code, "G06");
+    g.charge(call, "100 ZAR", now()).unwrap();
     g.result(call, &order("o1"), now()).unwrap();
-    assert_eq!(g.charge(call, "1 ZAR").unwrap_err().code, "G08");
+    assert_eq!(g.charge(call, "1 ZAR", now()).unwrap_err().code, "G08");
     assert!(g.state(now()).contains(r#""rule":"Shop.buy","calls":1,"spent":"300""#), "{}", g.state(now()));
 }
 
@@ -124,7 +182,7 @@ fn the_total_spend_and_the_call_count_hold_across_calls() {
     for (i, expect) in ["300 ZAR", "300 ZAR", "100 ZAR"].iter().enumerate() {
         let (call, reserve) = allowed(g.call("corner", "buy", &buy_args(1), now()));
         assert_eq!(reserve.as_deref(), Some(*expect));
-        g.charge(call, if i < 2 { "200 ZAR" } else { "100 ZAR" }).unwrap();
+        g.charge(call, if i < 2 { "200 ZAR" } else { "100 ZAR" }, now()).unwrap();
         g.result(call, &order(&format!("o{}", i)), now()).unwrap();
     }
     assert_eq!(code(g.call("corner", "buy", &buy_args(1), now())), "G05");
@@ -220,10 +278,10 @@ fn an_ask_rule_waits_for_the_person() {
 
     let (call, prompt) = asked(g.call("corner", "tip", &j(r#"{"amount":"20 ZAR"}"#), now()));
     assert!(prompt.contains("charge: at most 50 ZAR"), "{}", prompt);
-    assert_eq!(g.charge(call, "20 ZAR").unwrap_err().code, "G08");
+    assert_eq!(g.charge(call, "20 ZAR", now()).unwrap_err().code, "G08");
     let (call, reserve) = allowed(g.confirm(call, true, now()));
     assert_eq!(reserve.as_deref(), Some("50 ZAR"));
-    g.charge(call, "20 ZAR").unwrap();
+    g.charge(call, "20 ZAR", now()).unwrap();
     g.result(call, &Value::Null, now()).unwrap();
 
     // An answer that arrives after the grant has ended permits nothing.
@@ -250,7 +308,7 @@ fn an_action_that_does_not_declare_spend_cannot_charge() {
     let w = world();
     let mut g = gate(&w);
     let (call, _) = allowed(g.call("corner", "items", &Value::Null, now()));
-    assert_eq!(g.charge(call, "1 ZAR").unwrap_err().code, "G06");
+    assert_eq!(g.charge(call, "1 ZAR", now()).unwrap_err().code, "G06");
 }
 
 #[test]
@@ -406,7 +464,7 @@ fn random_agents_never_get_past_the_grant() {
                     let call = if open.is_empty() || rng.below(5) == 0 { rng.below(40) + 1 } else { open[rng.below(open.len() as u64) as usize] };
                     let amount = rng.below(350) as i128;
                     let currency = rng.pick(&["ZAR", "ZAR", "ZAR", "USD"]);
-                    if g.charge(call, &format!("{} {}", amount, currency)).is_ok() {
+                    if g.charge(call, &format!("{} {}", amount, currency), t).is_ok() {
                         assert!(open.contains(&call), "seed {}: a charge landed on a call that is not open", seed);
                         seen.iter_mut().find(|(c, _)| *c == call).unwrap().1.charged += amount * 1_000_000;
                     }

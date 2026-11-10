@@ -24,6 +24,25 @@ pub fn parse(path: &str, src: &str) -> (Option<File>, Vec<Diag>) {
             return (None, vec![diag]);
         }
     };
+    // Types and lists nest by recursion, so very deep nesting is refused before parsing.
+    let mut depth = 0usize;
+    for t in &toks {
+        match t.tok {
+            Tok::LAngle | Tok::LBracket => depth += 1,
+            Tok::RAngle | Tok::RBracket => depth = depth.saturating_sub(1),
+            _ => {}
+        }
+        if depth > 16 {
+            let diag = Diag {
+                code: "R00",
+                file: path.to_string(),
+                pos: t.pos,
+                message: "This is nested too deeply.".into(),
+                fix: "Nest types and lists at most 16 deep.".into(),
+            };
+            return (None, vec![diag]);
+        }
+    }
     let mut p = Parser { path, toks, i: 0, diags: Vec::new() };
     let file = p.file().ok();
     (file, p.diags)
@@ -236,16 +255,16 @@ impl<'a> Parser<'a> {
         let pos = self.pos();
         let base = match self.peek().clone() {
             Tok::Upper(name) => match name.as_str() {
-                "List" | "Untrusted" => {
+                "List" | "Untrusted" | "Returned" => {
                     self.next();
                     let fix = format!("Write `{}<Type>`.", name);
                     self.expect(Tok::LAngle, &fix)?;
                     let inner = Box::new(self.typeref()?);
                     self.expect(Tok::RAngle, &fix)?;
-                    if name == "List" {
-                        Base::List(inner)
-                    } else {
-                        Base::Untrusted(inner)
+                    match name.as_str() {
+                        "List" => Base::List(inner),
+                        "Untrusted" => Base::Untrusted(inner),
+                        _ => Base::Returned(inner),
                     }
                 }
                 _ => {
@@ -477,6 +496,9 @@ impl<'a> Parser<'a> {
             Some((w, f)) => (w, f),
             None => (number.as_str(), ""),
         };
+        if whole.len() > 18 {
+            return self.fail(pos, "This amount is too large.".into(), "Use a smaller amount.".into());
+        }
         if frac.len() > 6 {
             return self.fail(
                 pos,

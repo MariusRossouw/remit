@@ -33,6 +33,7 @@ def undo_own_booking(guard_name):
     services = Services()
     guard = GUARDS[guard_name](services)
     try:
+        guard.call(*TASK[0])
         booking = guard.call(*TASK[2])
         guard.call("bistro", "cancel", {"booking": booking})
     except (Refused, ServiceError):

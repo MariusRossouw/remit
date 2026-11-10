@@ -86,6 +86,8 @@ pub enum Base {
     Scalar(Scalar),
     List(Box<TypeRef>),
     Untrusted(Box<TypeRef>),
+    /// On a parameter: the value must be one the service itself returned.
+    Returned(Box<TypeRef>),
     Named(QName),
 }
 
@@ -133,7 +135,7 @@ impl Scalar {
 /// Names the language defines. They cannot be redeclared (R14).
 pub const BUILT_IN_TYPES: &[&str] = &[
     "Bool", "Int", "Decimal", "Text", "Date", "DateTime", "Duration", "Money", "List",
-    "Untrusted", "Store", "Http",
+    "Untrusted", "Returned", "Store", "Http",
 ];
 
 /// Words that have a meaning in a grant condition, so cannot name a parameter (R14).
@@ -167,6 +169,7 @@ impl TypeRef {
             Base::Scalar(s) => s.name().to_string(),
             Base::List(t) => format!("List<{}>", t.show()),
             Base::Untrusted(t) => format!("Untrusted<{}>", t.show()),
+            Base::Returned(t) => format!("Returned<{}>", t.show()),
             Base::Named(q) => q.show(),
         };
         if self.optional {

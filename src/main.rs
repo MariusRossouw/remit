@@ -44,7 +44,7 @@ fn main() -> ExitCode {
                 eprintln!("remit {}: name at least one file.", command);
                 return ExitCode::from(2);
             }
-            let mut read = |path: &str| std::fs::read_to_string(path).map_err(|e| e.to_string());
+            let mut read = read_contract;
             let world = remit::load(&files, &mut read);
             if command == "check" {
                 if json {
@@ -124,7 +124,10 @@ fn gate(rest: &[String]) -> ExitCode {
             "--grant" => grant = it.next().cloned(),
             "--bind" => binds.extend(it.next().cloned()),
             // For tests and repeatable benchmarks only. A host uses its own clock.
-            "--now" => fixed_now = it.next().and_then(|t| remit::gate::parse_datetime(t)),
+            "--now" => match it.next().and_then(|t| remit::gate::parse_datetime(t)) {
+                Some(t) => fixed_now = Some(t),
+                None => return usage("--now needs a date and time with an offset, such as 2026-11-10T12:00+02:00."),
+            },
             a if a.starts_with("--") => return usage(&format!("unknown option `{}`.", a)),
             a => file = Some(plain(a)),
         }
@@ -142,7 +145,7 @@ fn gate(rest: &[String]) -> ExitCode {
     }
     let mut entries = vec![file.clone()];
     entries.extend(parsed.iter().map(|(_, path, _)| path.clone()));
-    let mut read = |path: &str| std::fs::read_to_string(path).map_err(|e| e.to_string());
+    let mut read = read_contract;
     let world = remit::load(&entries, &mut read);
     if !world.diags.is_empty() {
         eprint!("{}", to_text(&world.diags));
@@ -183,13 +186,22 @@ fn gate(rest: &[String]) -> ExitCode {
         })
     };
     let bad = |why: &str| format!("{{\"ok\":false,\"error\":{}}}", json_string(why));
-    let mut line = String::new();
+    let mut bytes = Vec::new();
+    let mut input = std::io::stdin().lock();
     loop {
-        line.clear();
-        match std::io::stdin().read_line(&mut line) {
+        bytes.clear();
+        match std::io::BufRead::read_until(&mut input, b'\n', &mut bytes) {
             Ok(0) | Err(_) => break,
             Ok(_) => {}
         }
+        // A line that is not valid text gets an error, and the gate carries on.
+        let line = match std::str::from_utf8(&bytes) {
+            Ok(line) => line.to_string(),
+            Err(_) => {
+                println!("{}", bad("The request is not valid UTF-8."));
+                continue;
+            }
+        };
         if line.trim().is_empty() {
             continue;
         }
@@ -205,7 +217,7 @@ fn gate(rest: &[String]) -> ExitCode {
                 match text("op") {
                     "call" => decided(&gate.call(text("service"), text("action"), req.get("args").unwrap_or(&Value::Null), now())),
                     "confirm" => decided(&gate.confirm(call, req.get("approved") == Some(&Value::Bool(true)), now())),
-                    "charge" => done(gate.charge(call, text("amount"))),
+                    "charge" => done(gate.charge(call, text("amount"), now())),
                     "fail" => done(gate.fail(call)),
                     "result" => match gate.result(call, req.get("value").unwrap_or(&Value::Null), now()) {
                         Ok(d) => {
@@ -226,4 +238,17 @@ fn gate(rest: &[String]) -> ExitCode {
         println!("{}", answer);
     }
     ExitCode::SUCCESS
+}
+
+/// Reads a contract file. Only ordinary files of a sensible size, so a `use`
+/// line cannot point the checker at a pipe or a device.
+fn read_contract(path: &str) -> Result<String, String> {
+    let meta = std::fs::metadata(path).map_err(|e| e.to_string())?;
+    if !meta.is_file() {
+        return Err("it is not an ordinary file".into());
+    }
+    if meta.len() > 1_000_000 {
+        return Err("it is larger than 1 MB".into());
+    }
+    std::fs::read_to_string(path).map_err(|e| e.to_string())
 }

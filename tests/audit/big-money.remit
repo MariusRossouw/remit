@@ -1,0 +1,14 @@
+// The same amount written with and without a decimal point.
+
+"A bank."
+service Bank {
+  "Pay."
+  action pay(amount: Money)
+    effects: spend
+}
+
+"Pay up to a large total."
+grant Large {
+  allow Bank.pay where spend <= 10000000000000000000 ZAR, irreversible
+  expires 2026-11-13T23:59+02:00
+}

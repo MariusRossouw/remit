@@ -36,7 +36,7 @@ interface Restaurant {
     effects: read
 
   "Reserve a table. May take a deposit."
-  action book(slot: Slot, guest: Contact) -> Booking
+  action book(slot: Returned<Slot>, guest: Contact) -> Booking
     effects: write, spend
     undo: cancel
 
@@ -51,7 +51,8 @@ interface Restaurant {
 - Source is UTF-8. Whitespace separates tokens and has no other meaning.
 - Comments run from `//` to the end of the line.
 - Type, interface, service, and grant names start with an upper-case letter. All other names start with a lower-case letter.
-- A string is written in double quotes on one line. `\"` and `\\` are the only escapes.
+- A string is written in double quotes on one line. `\"` and `\\` are the only escapes. It may hold only visible characters and spaces.
+- Types and lists nest at most 16 deep. A money amount has at most 18 digits before the point.
 - Built-in type names cannot be declared again. A parameter cannot be called `spend`, `times`, `service`, or `irreversible`, because those words have a meaning in a grant.
 - Literals:
 
@@ -76,7 +77,8 @@ type      = [ doc ] "type" Name "{" { [ doc ] name ":" typeref } "}" ;
 enum      = [ doc ] "enum" Name "{" name { "," name } "}" ;
 
 typeref   = base [ "?" ] ;
-base      = scalar | "List" "<" typeref ">" | "Untrusted" "<" typeref ">" | qname ;
+base      = scalar | "List" "<" typeref ">" | "Untrusted" "<" typeref ">"
+          | "Returned" "<" typeref ">" | qname ;
 scalar    = "Bool" | "Int" | "Decimal" | "Text" | "Date" | "DateTime"
           | "Duration" | "Money" ;
 qname     = [ name "." ] Name ;
@@ -112,6 +114,7 @@ doc       = string ;
 - `List<T>` is an ordered list.
 - `Untrusted<T>` is content the service did not write and does not vouch for.
 - A `T` may be used where `Untrusted<T>` is expected. The reverse is never allowed, and the language has no conversion.
+- `Returned<T>` is allowed only as the whole type of a parameter, where `T` is a record type that an action of the same interface or service returns. The caller must pass a `T` that this service returned, unchanged. A service that goes by an id can then not be sent the id of one thing and the description of another.
 - Types may not refer to themselves, directly or through other types.
 
 ## 6. Descriptions
@@ -139,6 +142,7 @@ Any action may read. An action may do only what it declares.
 
 - The undo action must be in the same interface or service, and must accept the result of the action it reverses as its only required parameter.
 - A `read` action cannot have an undo.
+- An action cannot be its own undo, and an undo action cannot spend.
 - An acting action with no undo is **irreversible**.
 
 Effects are an upper bound on what an action may do. Undo is a promise about what it will allow afterwards.
@@ -164,7 +168,7 @@ service Bistro implements dining.Restaurant {
   uses tables: Store
 
   "Reserve a table. Deposit never exceeds R500."
-  action book(slot: dining.Slot, guest: dining.Contact) -> dining.Booking
+  action book(slot: Returned<dining.Slot>, guest: dining.Contact) -> dining.Booking
     effects: write, spend(max: 500 ZAR)
     undo: cancel
 }
@@ -185,7 +189,7 @@ An implementation holds nothing that is not listed.
 A service implements an interface when, for every action of the interface:
 
 1. The service has an action of the same name.
-2. It accepts every parameter of the interface. Extra parameters are optional types.
+2. It accepts every parameter of the interface. Extra parameters are optional types. A parameter is `Returned` in both or in neither.
 3. Its result is the interface's result, or has additional fields.
 4. Its effects are a subset of the interface's. A `spend` ceiling is the same or lower.
 5. If the interface promises an undo, the service does too, with the same or a longer period.
@@ -210,11 +214,12 @@ grant FridayDinner {
 
 - A grant permits the listed actions and nothing else.
 - `allow` permits calls without interruption. `ask` permits them only after the person confirms each one.
-- `spend <=` is a total across the life of the grant, not per call.
+- `spend <=` is the total that rule may spend across the life of the grant, not per call.
+- One action may have one `allow` rule and one `ask` rule. Calls outside the `allow` rule's limits then need the person's confirmation. Two rules of the same kind for one action are an error, because their limits would add up unseen.
 - `times <=` is the number of calls permitted.
 - `service in` restricts the rule to services at the listed addresses.
 - Any other condition compares a parameter of the action with a literal. `slot.start` reaches a field inside a parameter. It can pass through record types only.
-- A grant to call an action includes the right to call its undo on results that grant produced.
+- A grant to call an action includes the right to call its undo on results that grant produced. The agent may do so without asking, even when the undo contacts others.
 - Every grant expires.
 
 **Spending.** An `allow` rule for an action that spends is an error unless it carries `spend <=`.
@@ -232,15 +237,17 @@ grant FridayDinner {
 | R04 | A type refers to itself |
 | R05 | `Untrusted<T>` is used where `T` is expected |
 | R06 | `read` is combined with another effect, or a `read` action has an undo |
-| R07 | An undo target is missing, or does not accept the action's result |
+| R07 | An undo target is missing, does not accept the action's result, is the action itself, or spends |
 | R08 | A service does not conform to an interface it claims (section 11) |
 | R09 | A grant rule names an action or parameter that does not exist |
-| R10 | A grant condition has the wrong type, or `spend <=` is on an action that does not spend |
+| R10 | A grant condition has the wrong type or is repeated, or `spend <=` is on an action that does not spend |
 | R11 | An `allow` rule covers an irreversible action without `irreversible` |
 | R12 | A fetched file does not match `remit.lock` |
 | R13 | Files use each other in a cycle |
 | R14 | A name collides with a built-in |
 | R15 | An `allow` rule covers an action that spends without `spend <=` |
+| R16 | `Returned` is not the whole type of a parameter, does not wrap a record, or wraps a type nothing returns |
+| R17 | Two `allow` rules, or two `ask` rules, can cover the same call |
 
 Every error is reported as structured data: code, location, the rule in one sentence, and a suggested fix.
 
@@ -248,14 +255,17 @@ Every error is reported as structured data: code, location, the rule in one sent
 
 The gate stands between an agent and the services, and trusts neither. It answers every call with allow, ask, or deny.
 
-A call is allowed when the grant is live, a rule covers the action on that service, and every condition of that rule holds. Rules are tried in the order written. The first that permits the call counts it.
+A call is allowed when the grant is live, a rule covers the action on that service, and every condition of that rule holds. An `allow` rule is tried before an `ask` rule. The rule that permits the call counts it.
 
-- **Arguments** must fit the action's parameters. Unknown names are refused.
+A rule that names an interface covers the action as the interface declares it: arguments the interface does not have are refused, and results carry the interface's fields and `Untrusted` marks, whatever the service restates.
+
+- **Arguments** must fit the action's parameters. Unknown names are refused. A JSON number must be one every reader sees alike: a whole number up to 2^53, or at most 15 digits. Larger decimals are sent as text.
 - **`times <=`** counts every call the gate lets through, including calls that then fail.
-- **Spending.** A service takes money only by asking the gate during a call. The gate permits at most the lower of the action's `max` and what is left of the rule's `spend <=`. Money reserved by a call in progress is not available to another call. A refund does not restore a limit.
-- **Undo.** When a granted call returns, the gate remembers its result. The undo action is then allowed once, with exactly that result, inside the `within` period.
+- **Spending.** A service takes money only by asking the gate during a call, while the grant is live. The gate permits at most the lower of the action's `max` and what is left of the rule's `spend <=`. Money reserved by a call in progress is not available to another call. A refund does not restore a limit.
+- **Undo.** When a granted call returns, the gate remembers its result. The undo action is then allowed once, with exactly that result and no other argument, inside the `within` period. An undo call is not counted against any rule.
+- **`Returned` parameters.** The gate remembers every record each service returns under this grant, including records inside larger results. An argument for a `Returned` parameter must equal one of them and be of that same type, not merely the same shape. Anything inside an `Untrusted` part is never remembered.
 - **Results** reach the agent holding only the fields the action declares, with every `Untrusted` part listed. A result that does not fit is withheld.
-- **`ask`.** The gate writes what the person is shown, from the contract's descriptions and the call's arguments. Limits are checked again when the person answers.
+- **`ask`.** The gate writes what the person is shown. The description comes from the interface or service the grant names, never from a service's own rewording, and the arguments are marked as what the agent sent. Limits are checked again when the person answers, and the call may never charge more than the prompt said.
 - An expired or revoked grant permits nothing, including undo.
 
 Values are JSON. Money is a string such as `"500 ZAR"` and is never negative. Duration, Date, and DateTime are strings in their literal forms. An enum value is its member's name. An object may not repeat a key.
@@ -270,6 +280,7 @@ Values are JSON. Money is a string such as `"500 ZAR"` and is never negative. Du
 | G06 | A spending limit would be exceeded |
 | G07 | The person declined |
 | G08 | The call is unknown or finished, or its result does not fit |
+| G09 | An argument for a `Returned` parameter is not a value the service returned |
 
 ## 15. What is guaranteed, and by what
 
@@ -282,7 +293,7 @@ Values are JSON. Money is a string such as `"500 ZAR"` and is never negative. Du
 | A grant's limits hold at call time, whatever the agent asks for | Enforced by the gate. Tested, not yet proven |
 | A service takes no more money than the grant allows | Enforced by the gate, when payment goes through it |
 | An agent does the right thing inside its grant | **Not covered.** A grant bounds harm. It does not choose well |
-| A service acts on the arguments it was given | **Not covered.** A condition holds for what the agent sent, not for what the service then does |
+| A condition on an argument describes the real thing | Enforced by the gate for `Returned` parameters. Otherwise **not covered**: a condition holds for what the agent sent, not for what the service then does |
 | A service marks third-party content `Untrusted` | **Not covered.** A service can omit the mark |
 | A service is honest, or is who it says it is | **Not covered** |
 
@@ -292,7 +303,7 @@ Because a service can omit the mark, a caller must treat everything a service re
 
 - Implementation code. Implementations are written in existing languages.
 - Undo periods that depend on data, such as "until two hours before the booking".
-- Generic types other than `List` and `Untrusted`.
+- Generic types other than `List`, `Untrusted`, and `Returned`.
 - A marker for personal data.
 - Who holds a grant, and the format it travels in.
 - Gate state that survives a restart.

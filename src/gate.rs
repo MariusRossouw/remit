@@ -38,6 +38,7 @@ pub fn refusal(code: &str) -> &'static str {
         "G06" => "A spending limit would be exceeded.",
         "G07" => "The person declined.",
         "G08" => "The call is unknown, already finished, or its result does not fit the action.",
+        "G09" => "An argument must be a value the service returned, and this one is not.",
         _ => "",
     }
 }
@@ -286,6 +287,8 @@ struct Call {
     status: Status,
     spends: bool,
     reserve: Option<(i128, String)>,
+    /// For an asked call: the most the prompt told the person it could charge.
+    shown: Option<(i128, String)>,
     charged: i128,
     args: Value,
 }
@@ -308,6 +311,10 @@ pub struct Gate<'w> {
     rules: Vec<RuleState>,
     calls: Vec<Call>,
     undos: Vec<UndoRight>,
+    /// For each service: the record types its `Returned` parameters name.
+    wanted: Vec<Vec<(usize, String)>>,
+    /// Values services have returned: (service, type's file, type, canonical text).
+    returned: std::collections::BTreeSet<(usize, usize, String, String)>,
     revoked: bool,
 }
 
@@ -331,7 +338,37 @@ impl<'w> Gate<'w> {
             }
         }
         let rules = grant.rules.iter().map(|_| RuleState::default()).collect();
-        Ok(Gate { w, f, grant, expires, bindings, rules, calls: Vec::new(), undos: Vec::new(), revoked: false })
+        let mut wanted = Vec::new();
+        for b in &bindings {
+            let Some(Decl::Service(s)) = w.find_decl(b.file, &b.service) else {
+                unreachable!("checked above");
+            };
+            let mut types = Vec::new();
+            for a in w.service_actions(b.file, s).values() {
+                for p in &a.action.params {
+                    let ty = w.resolve_type(a.file, &p.ty);
+                    if let (true, Ty::Record(rf, rn)) = (ty.returned, ty.ty) {
+                        if !types.contains(&(rf, rn.clone())) {
+                            types.push((rf, rn));
+                        }
+                    }
+                }
+            }
+            wanted.push(types);
+        }
+        Ok(Gate {
+            w,
+            f,
+            grant,
+            expires,
+            bindings,
+            rules,
+            calls: Vec::new(),
+            undos: Vec::new(),
+            wanted,
+            returned: Default::default(),
+            revoked: false,
+        })
     }
 
     /// Ends the grant now. Nothing is permitted afterwards.
@@ -392,8 +429,13 @@ impl<'w> Gate<'w> {
                 let ok = match (s, v) {
                     (Scalar::Bool, Value::Bool(_)) => true,
                     (Scalar::Text, Value::Str(_)) => true,
-                    (Scalar::Int, Value::Num(n)) => n.parse::<i64>().is_ok(),
-                    (Scalar::Decimal, Value::Num(n) | Value::Str(n)) => parse_scaled(n).is_some(),
+                    // Numbers a reader using floating point would change are refused, so the
+                    // gate and the service never see two different values.
+                    (Scalar::Int, Value::Num(n)) => n.parse::<i64>().is_ok_and(|i| i.unsigned_abs() <= 1 << 53),
+                    (Scalar::Decimal, Value::Num(n)) => {
+                        parse_scaled(n).is_some() && n.trim_start_matches(['-', '0', '.']).bytes().filter(u8::is_ascii_digit).count() <= 15
+                    }
+                    (Scalar::Decimal, Value::Str(n)) => parse_scaled(n).is_some(),
                     (Scalar::Money, Value::Str(m)) => parse_money(m).is_some(),
                     (Scalar::Duration, Value::Str(d)) => parse_duration(d).is_some(),
                     (Scalar::Date, Value::Str(d)) => parse_date(d).is_some(),
@@ -406,8 +448,8 @@ impl<'w> Gate<'w> {
                 match s {
                     Scalar::Bool => wrong("true or false"),
                     Scalar::Text => wrong("text"),
-                    Scalar::Int => wrong("a whole number"),
-                    Scalar::Decimal => wrong("a number"),
+                    Scalar::Int => wrong("a whole number no larger than 9007199254740992"),
+                    Scalar::Decimal => wrong("a number, written as text if it has more than 15 digits"),
                     Scalar::Money => wrong("money written like \"500 ZAR\""),
                     Scalar::Duration => wrong("a duration written like \"24h\""),
                     Scalar::Date => wrong("a date written like \"2026-11-13\""),
@@ -462,8 +504,45 @@ impl<'w> Gate<'w> {
         }
     }
 
+    /// Remembers every record inside a result that a `Returned` parameter of this
+    /// service names. The type must be the same one, not merely the same shape.
+    fn remember(&mut self, b: usize, ty: &RTy, v: &Value) {
+        // Content the service does not vouch for never becomes something it "returned".
+        if ty.untrusted {
+            return;
+        }
+        match (&ty.ty, v) {
+            (Ty::List(inner), Value::List(items)) => {
+                for item in items {
+                    self.remember(b, inner, item);
+                }
+            }
+            (Ty::Record(rf, rn), Value::Obj(_)) => {
+                if self.wanted[b].iter().any(|(tf, tn)| tf == rf && tn == rn) {
+                    self.returned.insert((b, *rf, rn.clone(), v.text()));
+                }
+                if let Some(Decl::Type(t)) = self.w.find_decl(*rf, rn) {
+                    for field in &t.fields {
+                        if let Some(inner) = v.get(&field.name.name) {
+                            self.remember(b, &self.w.resolve_type(*rf, &field.ty), inner);
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// The action as the interface a rule names declares it, when the rule names an interface.
+    /// That is what the person approved, so it decides which arguments and results are seen.
+    fn approved(&self, r: usize, action: &str) -> Option<(usize, &'w Action)> {
+        let target = &self.grant.rules[r].target;
+        let (tf, iface) = self.w.find_interface(self.f, target)?;
+        iface.actions.iter().find(|a| a.name.name == action).map(|a| (tf, a))
+    }
+
     /// Checks arguments against an action's parameters.
-    fn fit_args(&self, file: usize, action: &Action, args: &Value) -> Result<Value, Deny> {
+    fn fit_args(&self, b: usize, file: usize, action: &Action, args: &Value) -> Result<Value, Deny> {
         let given: &[(String, Value)] = match args {
             Value::Obj(fields) => fields,
             Value::Null => &[],
@@ -482,7 +561,20 @@ impl<'w> Gate<'w> {
             let got = args.get(&p.name.name).unwrap_or(&Value::Null);
             match self.fit(&ty, got, true, &p.name.name, &mut Vec::new()) {
                 Ok(Value::Null) => {}
-                Ok(v) => out.push((p.name.name.clone(), v)),
+                Ok(v) => {
+                    if let (true, Ty::Record(tf, tn)) = (ty.returned, &ty.ty) {
+                        if !self.returned.contains(&(b, *tf, tn.clone(), v.text())) {
+                            return deny(
+                                "G09",
+                                format!(
+                                    "`{}` must be a {} that `{}` returned, passed back unchanged. This one was not returned.",
+                                    p.name.name, tn, self.bindings[b].name
+                                ),
+                            );
+                        }
+                    }
+                    out.push((p.name.name.clone(), v));
+                }
                 Err(why) => return deny("G03", format!("{}.", why)),
             }
         }
@@ -497,7 +589,12 @@ impl<'w> Gate<'w> {
         for cond in &rule.conds {
             match cond {
                 Cond::Irreversible(_) => {}
-                Cond::Spend(m, _) => limit = Some(m),
+                // The checker refuses a repeated limit. If one ever arrives, the lower holds.
+                Cond::Spend(m, _) => {
+                    if limit.is_none_or(|l: &Money| m.currency != l.currency || m.amount < l.amount) {
+                        limit = Some(m);
+                    }
+                }
                 Cond::Times(n, _) => {
                     if state.calls >= *n {
                         return deny("G05", format!("This grant permits `{}` {} time(s), and they are used.", action.name.name, n));
@@ -541,7 +638,7 @@ impl<'w> Gate<'w> {
             (None, None) => Ok(None),
             (None, Some(m)) => Ok(Some((m.amount, m.currency.clone()))),
             (Some(l), max) => {
-                let remaining = l.amount - state.spent - state.held;
+                let remaining = l.amount.saturating_sub(state.spent).saturating_sub(state.held);
                 if remaining <= 0 && l.amount > 0 {
                     return deny("G06", format!("This grant permits spending {} in total, and it is used.", l.text));
                 }
@@ -559,7 +656,7 @@ impl<'w> Gate<'w> {
     fn open(&mut self, call: usize, r: usize, reserve: Option<(i128, String)>) {
         self.rules[r].calls += 1;
         if let Some((amount, _)) = &reserve {
-            self.rules[r].held += *amount;
+            self.rules[r].held = self.rules[r].held.saturating_add(*amount);
         }
         self.calls[call].reserve = reserve;
         self.calls[call].status = Status::Open;
@@ -587,7 +684,7 @@ impl<'w> Gate<'w> {
             return deny("G02", format!("`{}` has no action called `{}`.", service, action));
         };
         let (file, act) = (found.file, found.action);
-        let args = self.fit_args(file, act, args)?;
+        let args = self.fit_args(b, file, act, args)?;
         let spends = act.effect(EffectKind::Spend).is_some();
         let new_call = |rule, status, args| Call {
             binding: b,
@@ -596,13 +693,15 @@ impl<'w> Gate<'w> {
             status,
             spends,
             reserve: None,
+            shown: None,
             charged: 0,
             args,
         };
 
         // The right to undo a result this grant produced. Used once, charges nothing.
         let required: Vec<&Param> = act.params.iter().filter(|p| !p.ty.optional).collect();
-        if let [param] = required[..] {
+        let only_the_result = matches!(&args, Value::Obj(fields) if fields.len() == 1);
+        if let ([param], true) = (&required[..], only_the_result) {
             if let Some(arg) = args.get(&param.name.name) {
                 let text = arg.text();
                 let right = self.undos.iter().position(|u| {
@@ -618,10 +717,28 @@ impl<'w> Gate<'w> {
             }
         }
 
+        // The `allow` rule is tried before the `ask` rule, whichever is written first.
+        let mut order: Vec<usize> = (0..self.grant.rules.len()).collect();
+        order.sort_by_key(|&r| self.grant.rules[r].ask);
         let mut first_refusal = None;
-        for r in 0..self.grant.rules.len() {
+        for r in order {
             if !self.rule_covers(&self.grant.rules[r], b, action) {
                 continue;
+            }
+            // A rule on an interface covers the action as the interface declares it.
+            if let (Some((_, wanted)), Value::Obj(fields)) = (self.approved(r, action), &args) {
+                if let Some((extra, _)) = fields.iter().find(|(k, _)| !wanted.params.iter().any(|p| p.name.name == *k)) {
+                    first_refusal.get_or_insert(Deny {
+                        code: "G03",
+                        reason: format!(
+                            "The grant covers `{}.{}`, which has no parameter called `{}`.",
+                            self.grant.rules[r].target.show(),
+                            action,
+                            extra
+                        ),
+                    });
+                    continue;
+                }
             }
             match self.permits(r, b, file, act, &args) {
                 Err(d) => {
@@ -630,8 +747,14 @@ impl<'w> Gate<'w> {
                 Ok(reserve) => {
                     let id = self.calls.len();
                     if self.grant.rules[r].ask {
-                        let prompt = self.prompt(service, act, &actions, &args, &reserve);
-                        self.calls.push(new_call(Some(r), Status::Pending, args));
+                        // Describe the action in the words of what the grant names, which the
+                        // person approved. A service that restates the action cannot reword it.
+                        let approved = self.w.target_actions(self.f, &self.grant.rules[r].target);
+                        let approved = approved.as_ref().unwrap_or(&actions);
+                        let prompt = self.prompt(service, act, approved, &args, &reserve);
+                        let mut call = new_call(Some(r), Status::Pending, args);
+                        call.shown = reserve;
+                        self.calls.push(call);
                         return Ok(Decision::Ask { call: id as u64 + 1, prompt });
                     }
                     self.calls.push(new_call(Some(r), Status::Pending, args));
@@ -655,9 +778,10 @@ impl<'w> Gate<'w> {
         args: &Value,
         reserve: &Option<(i128, String)>,
     ) -> String {
-        let mut out = format!("{}\n", act.doc.as_deref().unwrap_or("(no description)"));
+        let doc = siblings.get(&act.name.name).and_then(|a| a.action.doc.as_deref()).unwrap_or("(no description)");
+        let mut out = format!("{}\n", doc);
         out.push_str(&format!("  action: {}.{}\n", service, act.name.name));
-        out.push_str(&format!("  with:   {}\n", args.text()));
+        out.push_str(&format!("  the agent sent: {}\n", args.text()));
         out.push_str(&format!("  may:    {}\n", crate::explain::effect_words(act)));
         match Self::show_reserve(reserve) {
             Some(r) => out.push_str(&format!("  charge: at most {}\n", r)),
@@ -706,6 +830,11 @@ impl<'w> Gate<'w> {
         match self.permits(r, b, found.file, found.action, &self.calls[id].args) {
             Err(d) => refuse(self, d),
             Ok(reserve) => {
+                // Never more than the prompt told the person.
+                let reserve = match (reserve, self.calls[id].shown.clone()) {
+                    (Some((now_free, c)), Some((told, _))) => Some((now_free.min(told), c)),
+                    (reserve, _) => reserve,
+                };
                 let shown = Self::show_reserve(&reserve);
                 self.open(id, r, reserve);
                 Decision::Allow { call, reserve: shown, undo: false }
@@ -714,7 +843,8 @@ impl<'w> Gate<'w> {
     }
 
     /// The service asks to take money during an open call. All payment goes through here.
-    pub fn charge(&mut self, call: u64, amount: &str) -> Result<(), Deny> {
+    pub fn charge(&mut self, call: u64, amount: &str, now: i64) -> Result<(), Deny> {
+        self.live(now)?;
         let id = self.pending(call, Status::Open)?;
         let Some((amount, currency)) = parse_money(amount) else {
             return deny("G06", "A charge must be money written like \"200 ZAR\", and not negative.".into());
@@ -727,14 +857,17 @@ impl<'w> Gate<'w> {
             if currency != *reserve_currency {
                 return deny("G06", format!("This call may charge only in {}.", reserve_currency));
             }
-            if c.charged + amount > *reserve {
+            if c.charged.checked_add(amount).is_none_or(|total| total > *reserve) {
                 return deny(
                     "G06",
                     format!("This call may charge at most {} {} in total.", show_scaled(*reserve), reserve_currency),
                 );
             }
         }
-        c.charged += amount;
+        match c.charged.checked_add(amount) {
+            Some(total) => c.charged = total,
+            None => return deny("G06", "This call has charged more than can be counted.".into()),
+        }
         Ok(())
     }
 
@@ -743,9 +876,9 @@ impl<'w> Gate<'w> {
         c.status = Status::Closed;
         if let Some(r) = c.rule {
             if let Some((reserve, _)) = &c.reserve {
-                self.rules[r].held -= *reserve;
+                self.rules[r].held = self.rules[r].held.saturating_sub(*reserve);
             }
-            self.rules[r].spent += c.charged;
+            self.rules[r].spent = self.rules[r].spent.saturating_add(c.charged);
         }
     }
 
@@ -769,6 +902,20 @@ impl<'w> Gate<'w> {
             Ok(v) => v,
             Err(why) => return deny("G08", format!("The service's result does not fit `{}`: {}.", result.show(), why)),
         };
+        // Through a rule on an interface, the agent sees the interface's fields and its
+        // `Untrusted` marks. A service that restates the action cannot remove them.
+        let via = self.calls[id].rule.and_then(|r| self.approved(r, &found.action.name.name));
+        let (ty, fitted) = match via.and_then(|(tf, a)| a.result.as_ref().map(|r| self.w.resolve_type(tf, r))) {
+            Some(ity) => {
+                untrusted.clear();
+                match self.fit(&ity, &fitted, false, "", &mut untrusted) {
+                    Ok(v) => (ity, v),
+                    Err(why) => return deny("G08", format!("The service's result does not fit `{}`: {}.", result.show(), why)),
+                }
+            }
+            None => (ty, fitted),
+        };
+        self.remember(b, &ty, &fitted);
         if let (Some(_), Some(undo)) = (self.calls[id].rule, &found.action.undo) {
             // Keep the result in the shape the undo action takes, so it can be matched later.
             let shaped = actions.get(&undo.target.name).and_then(|t| {
@@ -781,7 +928,7 @@ impl<'w> Gate<'w> {
                     binding: b,
                     action: undo.target.name.clone(),
                     value: shaped.text(),
-                    until: undo.within.as_ref().map(|d| now + d.minutes as i64 * 60),
+                    until: undo.within.as_ref().map(|d| now.saturating_add(i64::try_from(d.minutes).unwrap_or(i64::MAX).saturating_mul(60))),
                     used: false,
                 });
             }

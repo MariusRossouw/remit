@@ -1,0 +1,9 @@
+type Slot { id: Text }
+type Coupon { code: Text }
+
+"A restaurant."
+service Bistro {
+  "Find free tables."
+  action findTables(coupon: Returned<Coupon>) -> List<Slot>
+    effects: read
+}

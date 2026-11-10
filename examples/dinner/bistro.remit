@@ -7,7 +7,7 @@ service Bistro implements dining.Restaurant {
   uses tables: Store
 
   "Reserve a table. Deposit never exceeds R500."
-  action book(slot: dining.Slot, guest: dining.Contact) -> dining.Booking
+  action book(slot: Returned<dining.Slot>, guest: dining.Contact) -> dining.Booking
     effects: write, spend(max: 500 ZAR)
     undo: cancel
 

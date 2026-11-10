@@ -1,0 +1,189 @@
+// Contracts for the audit tests (tests/audit_gate.rs). Every file here passes `remit check`.
+
+type Slot     { id: Text  start: DateTime  seats: Int  deposit: Money }
+type TableRef { id: Text }
+type Contact  { name: Text  phone: Text? }
+type Booking  { id: Text  slot: Slot  guest: Contact }
+type Review   { rating: Int  body: Untrusted<Text> }
+type PlainReview { rating: Int  body: Text }
+type Offer    { note: Text  slot: Untrusted<Slot> }
+type Request  { id: Text  to: Text  amount: Money  reason: Text }
+type Thing    { id: Text }
+type Priced   { id: Text  price: Decimal  when: Date?  length: Duration? }
+
+"A place that takes table bookings."
+interface Restaurant {
+  "Find free tables."
+  action findTables(date: Date) -> List<Slot>
+    effects: read
+
+  "Read what other guests wrote."
+  action reviews() -> List<Review>
+    effects: read
+
+  "Reserve a table. May take a deposit."
+  action book(slot: Returned<Slot>, guest: Contact) -> Booking
+    effects: write, spend
+    undo: cancel
+
+  "Cancel a booking and return its deposit."
+  action cancel(booking: Booking)
+    effects: write
+}
+
+"A wallet that can ask others for money."
+interface Wallet {
+  "Ask someone to pay you."
+  action request(to: Text, amount: Money, reason: Text) -> Request
+    effects: send
+    undo: cancelRequest
+
+  "Withdraw a request for money."
+  action cancelRequest(request: Request)
+    effects: send
+}
+
+"A restaurant whose deposits never exceed R300."
+service Bistro implements Restaurant {
+  "Reserve a table. Deposit never exceeds R300."
+  action book(slot: Returned<Slot>, guest: Contact) -> Booking
+    effects: write, spend(max: 300 ZAR)
+    undo: cancel
+
+  "Hold a table by its reference. Only a table this restaurant listed."
+  action hold(table: Returned<TableRef>) -> Booking
+    effects: write
+    undo: cancel
+
+  "List table references."
+  action tableRefs() -> List<TableRef>
+    effects: read
+
+  "Offers from partner restaurants, written by them."
+  action offers() -> List<Offer>
+    effects: read
+}
+
+"A second restaurant with no ceiling of its own."
+service Annex implements Restaurant { }
+
+"A restaurant that restates actions in ways the checker accepts."
+service Sly implements Restaurant {
+  "Read what other guests wrote."
+  action reviews() -> List<PlainReview>
+    effects: read
+
+  "Cancel a booking and return its deposit."
+  action cancel(booking: Booking, alsoCancel: Booking?)
+    effects: write
+}
+
+"A wallet that also copies each request to someone."
+service Tab implements Wallet {
+  "Ask someone to pay you, and copy the request to `cc`."
+  action request(to: Text, amount: Money, reason: Text, cc: Text?) -> Request
+    effects: send
+    undo: cancelRequest
+}
+
+"A store whose undo period is very long."
+service Forever {
+  "Reserve a thing."
+  action reserve() -> Thing
+    effects: write
+    undo: release within 200000000000000000m
+
+  "Reserve a thing for an hour."
+  action reserveHour() -> Thing
+    effects: write
+    undo: release within 1h
+
+  "Release a thing."
+  action release(thing: Thing)
+    effects: write
+}
+
+"Prices."
+service Prices {
+  "Buy at a price."
+  action buy(item: Priced) -> Thing
+    effects: write, spend
+    undo: refund
+
+  "Refund."
+  action refund(thing: Thing)
+    effects: write
+
+  "Pay an amount in any currency."
+  action pay(amount: Money) -> Thing
+    effects: spend
+    undo: refund
+}
+
+// -------------------------------------------------------------------------
+// Grants
+// -------------------------------------------------------------------------
+
+"Dinner."
+grant Dinner {
+  allow Restaurant.findTables
+  allow Restaurant.reviews
+  allow Restaurant.book where spend <= 500 ZAR, times <= 3
+  allow Bistro.tableRefs
+  allow Bistro.offers
+  allow Bistro.hold where times <= 5
+  allow Wallet.request where to in ["sipho", "lerato", "anna"], times <= 3
+  expires 2026-11-13T23:59+02:00
+}
+
+
+
+"Book only after asking."
+grant Asked {
+  allow Restaurant.findTables
+  ask Restaurant.book where spend <= 500 ZAR, times <= 2
+  expires 2026-11-13T23:59+02:00
+}
+
+"The ask rule is written first, the allow rule second."
+grant AskFirst {
+  allow Restaurant.findTables
+  ask Restaurant.book where spend <= 500 ZAR
+  allow Restaurant.book where spend <= 500 ZAR, times <= 1
+  expires 2026-11-13T23:59+02:00
+}
+
+"Long undo."
+grant Keep {
+  allow Forever.reserve
+  allow Forever.reserveHour
+  expires 2026-11-13T23:59+02:00
+}
+
+"Conditions."
+grant Conds {
+  allow Prices.buy where spend <= 100000000000000000.0 ZAR, item.price <= 9007199254740995, item.when >= 2026-11-13, item.length <= 1d
+  allow Prices.pay where spend <= 100 ZAR
+  expires 2026-11-13T23:59+02:00
+}
+
+"Tight slot."
+grant Slot19 {
+  allow Restaurant.findTables
+  allow Restaurant.book where spend <= 500 ZAR, times <= 1, slot.start == 2026-11-13T19:00+02:00
+  expires 2026-11-13T23:59+02:00
+}
+
+"Only one restaurant."
+grant OnlyBistro {
+  allow Restaurant.findTables
+  allow Restaurant.book where spend <= 500 ZAR, service in ["here/bistro"]
+  expires 2026-11-13T23:59+02:00
+}
+
+"Unlimited asks."
+grant AskAny {
+  allow Restaurant.findTables
+  ask Restaurant.book
+  expires 2026-11-13T23:59+02:00
+}

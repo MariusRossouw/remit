@@ -1,5 +1,7 @@
 # Scenario: dinner for four, bill split
 
+**This is the long-term picture, not the current state.** The grant, its limits, and the over-limit booking being refused are built. The sandbox that stops a compromised dependency, the audit log, the generated interfaces, and provenance that follows content through the agent are not. The [README](../README.md) lists what is built.
+
 One use case, worked end to end, to expose the real design questions. The contracts are in [examples/dinner](../examples/dinner), written in [version 0 of the language](../SPEC.md).
 
 ## The people and programs

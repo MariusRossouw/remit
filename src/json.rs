@@ -199,8 +199,12 @@ impl<'a> Reader<'a> {
             }
             r.i > from
         };
+        let whole = self.i;
         if !digits(self) {
             return Err(format!("bad number at byte {}", start));
+        }
+        if self.c[whole] == b'0' && self.i - whole > 1 {
+            return Err("a number may not start with a zero".into());
         }
         if self.c.get(self.i) == Some(&b'.') {
             self.i += 1;
@@ -216,6 +220,9 @@ impl<'a> Reader<'a> {
 
     fn hex4(&mut self) -> Result<u32, String> {
         let s = self.c.get(self.i..self.i + 4).ok_or("bad \\u escape")?;
+        if !s.iter().all(u8::is_ascii_hexdigit) {
+            return Err("bad \\u escape".into());
+        }
         let s = std::str::from_utf8(s).map_err(|_| "bad \\u escape")?;
         let n = u32::from_str_radix(s, 16).map_err(|_| "bad \\u escape")?;
         self.i += 4;

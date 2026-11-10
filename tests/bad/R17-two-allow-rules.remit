@@ -1,0 +1,18 @@
+"A shop."
+service Shop {
+  "Buy one item."
+  action buy(item: Text) -> Text
+    effects: spend
+    undo: refund
+
+  "Return an item."
+  action refund(receipt: Text)
+    effects: write
+}
+
+"Buy things."
+grant Shopping {
+  allow Shop.buy where spend <= 500 ZAR, times <= 1
+  allow Shop.buy where spend <= 500 ZAR, times <= 1
+  expires 2026-11-13T23:59+02:00
+}

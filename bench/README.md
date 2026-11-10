@@ -16,7 +16,7 @@ Remit claims to be better than what exists. Each claim here is measured against 
 | --- | --- | --- |
 | [describe-a-service](describe-a-service) | How much text does it take to tell an agent what a service does? | First result, one service. Remit is 2.7 to 4.4 times smaller |
 | [write-a-service](write-a-service) | Can a model write a correct description first try, given only the specification? | First result, six services, two models. A tie on correctness; Remit answers are much smaller but the specification costs input tokens |
-| [resist-injection](resist-injection) | Which guard stops the harm when an agent is told to do harm? | First result, one scenario, ten attacks. With a hijacked agent, the original grant blocks 7 of 10, equal to a hand-written guard and ahead of stateless MCP guards (2 or 3). A tightened grant blocks 9, against 7 for a stateless policy with the same conditions. One attack beats every guard. With two real models, no attack was attempted under any guard: a tie |
+| [resist-injection](resist-injection) | Which guard stops the harm when an agent is told to do harm? | One scenario, nineteen attacks, nine of them from an outside audit. With a hijacked agent and the same conditions, a hand-written guard lets 4 through, Remit 6, and a stateless policy 7. A careful person approving every call lets 3 through. With two real models, no attack was attempted under any guard: a tie |
 
 ## Planned
 

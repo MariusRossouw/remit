@@ -4,53 +4,39 @@ Checked November 2026. Most of the sources below are secondary and the field mov
 
 ## The short version
 
-Every piece of Remit exists somewhere. No one has put them behind a single thing a builder writes. Each standard today solves one boundary and leaves the builder to wire the rest by hand:
+Remit is one approval, sized to one task, enforced across unrelated services. Each existing piece covers part of that:
 
-| Need | What exists | State | Gap |
-| --- | --- | --- | --- |
-| Agents calling services | MCP | Widely adopted | Tools have no declared effects or enforced bounds; many servers still use static API keys |
-| Agents acting on web pages | WebMCP | Draft; Chrome origin trial only; API still changing | Bolted onto pages; inherits the origin's full authority |
-| Delegated authority | OAuth 2.1, token exchange, AAuth, agent identity drafts | Drafts and early specifications | No standard way for each hop to narrow permissions; no task-scoped vocabulary |
-| Agent payments | ACP, AP2, x402 | ACP in production; others early, low volume | Separate from what the code is allowed to do |
-| Sandboxed code | Wasm component model, WASI 0.3 | Stable on servers; browsers need a transpiler | A sandbox, not an authoring model |
-| Capability and effect types | Scala 3 capture checking, AILANG, research on language-based agent control | Research and experiments | Aimed at agent code execution, not at web services and delegation |
+| What exists | What it covers | What it leaves open |
+| --- | --- | --- |
+| Payment network caps (capped payment tokens, AP2 mandates) | Money, at one seller, enforced where it counts | Everything that is not money |
+| Policy engines at an agent gateway (Cedar, OPA) | Which tools, with which arguments. Analysis tools that can prove what a policy allows | Running totals need an enforcement point that keeps them. Tied to one platform |
+| MCP tool annotations | A vocabulary for describing risk | They are hints. Nothing enforces them |
+| OAuth Rich Authorization Requests, GNAP | Typed, detailed authorisation requests | No counting across calls, no consent vocabulary |
+| Macaroons, Biscuit | Authority that can be handed on and only narrowed, checked offline | No counters. No link to a person-readable task |
+| Research on capability and information-flow control for agents (CaMeL and others) | Tracking untrusted data through an agent's plan | Not products. A cost in what the agent can do |
+| On-chain permissions (session keys, delegation frameworks) | Value, call, and time limits enforced by a ledger | Assets only |
 
-## Where Remit sits
+Some of this table is from an outside review and secondary sources, and has not been checked against primary documents.
 
-Remit is the **authoring layer above these standards**. You write one contract. The toolchain emits the MCP server, the WebMCP tools, the OAuth scopes, the payment mandate, and the Wasm component, and keeps them consistent.
+## What Remit adds
 
-This is the move TypeScript made with JavaScript: it did not replace the platform, it compiled to it and added the guarantees the platform lacked.
+- Counts and totals kept across calls and across services, under one grant a person can read.
+- Arguments tied to where they came from: the agent can act only on something the service really returned.
+- Undo limited to what the agent itself did.
+- Consent text generated from what the person approved.
+- Vendor-neutral and open.
 
-It follows that:
+None of this needs a new language. The contract syntax is a convenient way to write it and check it. The plan is to give it a JSON form and offer it as an extension to MCP ([roadmap](roadmap.md)).
 
-- we do not need any standard to lose,
-- when a new protocol wins, we add an emitter,
-- a builder gets safety across all of them from a single source.
-
-## Why an agent would choose it
-
-- The whole language fits in context, so no prior training is needed.
-- A contract is a complete description of a service. No documentation to hunt for.
-- The checker gives structured errors with fixes, so the agent converges in a few tries.
-- Code it writes can be run by its user immediately, because the bounds are enforced.
-
-## Why a person would choose it
-
-- New builders cannot ship a data leak or an open payment endpoint by accident. The safe path is the only path.
-- Permission prompts are generated in plain language from the contract.
-- One definition gives them an agent-facing and a human-facing product.
-
-## How we could be blindsided
+## How this could be overtaken
 
 | Risk | Likelihood | Response |
 | --- | --- | --- |
-| A large vendor ships effect declarations and enforced bounds inside its own agent framework | High | Stay vendor-neutral and emit to their format. Lock-in is their weakness. |
-| An established language gains this (Scala's capability work is the most serious) | Medium | They carry a large language and ecosystem. Our edge is being small and web-shaped. Learn from their papers. |
-| MCP itself adds effects, attenuation, and provenance | Medium | Good outcome. Remit becomes the easiest way to author for it. |
-| Another small language gets there first | Medium | Watch AILANG and similar. Compete on the web service and delegation story, which they do not address. |
-| The idea is right but nobody adopts a new language | High | Keep the contract language useful alone, with implementations in existing languages, so adoption does not require switching. |
-
-The last row is the one most likely to sink the project. It shapes the roadmap.
+| A large vendor adds counters and task grants to its own agent gateway | High | Be the open, portable form. Offer the parts they lack, such as argument provenance and undo rights, upstream |
+| MCP adopts task grants itself | Medium | The best outcome. Contribute the design and the reference gate |
+| Payment networks make spending caps universal | High, and good | Stop mediating payment. Issue their credentials |
+| Models become reliably immune to being misled | Low | Then the gate is insurance nobody claims on. Limits on an honest agent's mistakes would still matter |
+| Nobody adopts another format | High | Work in front of unmodified MCP servers, so adopting costs one proxy |
 
 ## Sources
 

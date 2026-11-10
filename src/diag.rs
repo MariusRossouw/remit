@@ -25,18 +25,29 @@ pub fn rule(code: &str) -> &'static str {
         "R04" => "A type refers to itself.",
         "R05" => "Untrusted<T> is used where T is expected.",
         "R06" => "`read` is combined with another effect, or a `read` action has an undo.",
-        "R07" => "An undo target is missing, or does not accept the action's result.",
+        "R07" => "An undo target is missing, does not accept the action's result, is the action itself, or spends.",
         "R08" => "A service does not conform to an interface it claims.",
         "R09" => "A grant rule names an action or parameter that does not exist.",
-        "R10" => "A grant condition has the wrong type, or `spend <=` is on an action that does not spend.",
+        "R10" => "A grant condition has the wrong type, is repeated, or `spend <=` is on an action that does not spend.",
         "R11" => "An `allow` rule covers an irreversible action without `irreversible`.",
         "R12" => "A fetched file does not match remit.lock.",
         "R13" => "Files use each other in a cycle.",
         "R14" => "A name collides with a built-in.",
         "R15" => "An `allow` rule covers an action that spends without `spend <=`.",
+        "R16" => "`Returned` is used somewhere other than a parameter, on something that is not a record, or on a type nothing returns.",
+        "R17" => "Two `allow` rules, or two `ask` rules, can cover the same call.",
         "T01" => "This checker does not support this yet.",
         _ => "",
     }
+}
+
+/// Characters that change how text is displayed without being seen: control
+/// characters, line and paragraph separators, and marks that reverse or hide text.
+pub fn hidden(c: char) -> bool {
+    let n = c as u32;
+    n < 0x20
+        || (0x7f..=0x9f).contains(&n)
+        || matches!(n, 0x200b..=0x200f | 0x2028..=0x202e | 0x2060..=0x2069 | 0xfeff)
 }
 
 pub fn json_string(s: &str) -> String {
@@ -49,7 +60,7 @@ pub fn json_string(s: &str) -> String {
             '\n' => out.push_str("\\n"),
             '\r' => out.push_str("\\r"),
             '\t' => out.push_str("\\t"),
-            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c if hidden(c) => out.push_str(&format!("\\u{:04x}", c as u32)),
             c => out.push(c),
         }
     }

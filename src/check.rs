@@ -190,9 +190,11 @@ pub struct RTy {
     pub ty: Ty,
     pub optional: bool,
     pub untrusted: bool,
+    /// The value must be one the service itself returned. Only on parameters.
+    pub returned: bool,
 }
 
-enum Why {
+pub enum Why {
     Untrusted,
     Mismatch,
 }
@@ -292,13 +294,18 @@ impl World {
 
     pub fn resolve_type(&self, f: usize, t: &TypeRef) -> RTy {
         let mut r = match &t.base {
-            Base::Scalar(s) => RTy { ty: Ty::Scalar(*s), optional: false, untrusted: false },
+            Base::Scalar(s) => RTy { ty: Ty::Scalar(*s), optional: false, untrusted: false, returned: false },
             Base::List(inner) => {
-                RTy { ty: Ty::List(Box::new(self.resolve_type(f, inner))), optional: false, untrusted: false }
+                RTy { ty: Ty::List(Box::new(self.resolve_type(f, inner))), optional: false, untrusted: false, returned: false }
             }
             Base::Untrusted(inner) => {
                 let mut r = self.resolve_type(f, inner);
                 r.untrusted = true;
+                r
+            }
+            Base::Returned(inner) => {
+                let mut r = self.resolve_type(f, inner);
+                r.returned = true;
                 r
             }
             Base::Named(q) => {
@@ -310,7 +317,7 @@ impl World {
                         _ => Ty::Unknown,
                     },
                 };
-                RTy { ty, optional: false, untrusted: false }
+                RTy { ty, optional: false, untrusted: false, returned: false }
             }
         };
         if t.optional {
@@ -342,7 +349,7 @@ impl World {
                 ));
             };
             let Some(decl) = self.record(*rf, rn) else {
-                return Ok(RTy { ty: Ty::Unknown, optional: false, untrusted: false });
+                return Ok(RTy { ty: Ty::Unknown, optional: false, untrusted: false, returned: false });
             };
             let Some(field) = decl.fields.iter().find(|x| x.name.name == seg.name) else {
                 let fix = suggest(&seg.name, decl.fields.iter().map(|x| x.name.name.as_str()), &format!("`{}` has these fields: {}.", rn, decl.fields.iter().map(|x| x.name.name.clone()).collect::<Vec<_>>().join(", ")));
@@ -362,7 +369,7 @@ impl World {
     }
 
     /// Can a value of type `from` be used where `to` is expected?
-    fn assignable(&self, from: &RTy, to: &RTy, depth: u32) -> Result<(), Why> {
+    pub fn assignable(&self, from: &RTy, to: &RTy, depth: u32) -> Result<(), Why> {
         if from.untrusted && !to.untrusted {
             return Err(Why::Untrusted);
         }
@@ -463,10 +470,65 @@ impl<'a> Ctx<'a> {
         None
     }
 
+    /// R16. `Returned<T>` may wrap a parameter's whole type, where T is a record
+    /// that some action next to it returns. `param` is None anywhere else.
+    fn check_returned(&mut self, f: usize, t: &TypeRef, param: Option<(&str, &BTreeMap<String, ActionIn>)>) {
+        let w = self.w;
+        match &t.base {
+            Base::Scalar(_) | Base::Named(_) => {}
+            Base::List(inner) | Base::Untrusted(inner) => self.check_returned(f, inner, None),
+            Base::Returned(inner) => {
+                self.check_returned(f, inner, None);
+                let Some((name, siblings)) = param else {
+                    self.diag(
+                        "R16",
+                        f,
+                        t.pos,
+                        "`Returned` can only wrap the whole type of a parameter.".into(),
+                        "Use it as `name: Returned<Type>` in an action's parameters, and nowhere else.".into(),
+                    );
+                    return;
+                };
+                let inner_ty = w.resolve_type(f, inner);
+                let target = match &inner_ty.ty {
+                    Ty::Record(rf, rn) if !inner_ty.untrusted && !inner_ty.optional && !matches!(inner.base, Base::Returned(_)) => (*rf, rn.clone()),
+                    Ty::Unknown => return,
+                    _ => {
+                        self.diag(
+                            "R16",
+                            f,
+                            inner.pos,
+                            format!("`Returned` needs a record type, and `{}` is not one.", inner.show()),
+                            "Wrap a declared `type`, such as `Returned<Slot>`.".into(),
+                        );
+                        return;
+                    }
+                };
+                let produced = siblings.values().any(|s| {
+                    let Some(result) = &s.action.result else {
+                        return false;
+                    };
+                    let mut records = Vec::new();
+                    w.mentioned_records(&w.resolve_type(s.file, result), &mut records);
+                    records.iter().any(|r| *r == target || w.reaches(&target, r, &mut BTreeSet::new()))
+                });
+                if !produced {
+                    self.diag(
+                        "R16",
+                        f,
+                        t.pos,
+                        format!("No action here returns a `{}`, so nothing could ever be passed as `{}`.", inner.show(), name),
+                        format!("Add an action that returns `{}`, or remove `Returned`.", inner.show()),
+                    );
+                }
+            }
+        }
+    }
+
     fn check_typeref(&mut self, f: usize, t: &TypeRef) {
         match &t.base {
             Base::Scalar(_) => {}
-            Base::List(inner) | Base::Untrusted(inner) => self.check_typeref(f, inner),
+            Base::List(inner) | Base::Untrusted(inner) | Base::Returned(inner) => self.check_typeref(f, inner),
             Base::Named(q) => {
                 let Some(tf) = self.alias_file(f, &q.alias) else {
                     return;
@@ -550,6 +612,7 @@ impl<'a> Ctx<'a> {
                     self.duplicates(f, "field", t.fields.iter().map(|x| &x.name));
                     for field in &t.fields {
                         self.check_typeref(f, &field.ty);
+                        self.check_returned(f, &field.ty, None);
                     }
                     let me = (f, t.name.name.clone());
                     if w.reaches(&me, &me, &mut BTreeSet::new()) {
@@ -588,6 +651,7 @@ impl<'a> Ctx<'a> {
         self.duplicates(f, "parameter", a.params.iter().map(|p| &p.name));
         for p in &a.params {
             self.check_typeref(f, &p.ty);
+            self.check_returned(f, &p.ty, Some((&p.name.name, siblings)));
             if CONDITION_WORDS.contains(&p.name.name.as_str()) {
                 self.diag(
                     "R14",
@@ -600,6 +664,7 @@ impl<'a> Ctx<'a> {
         }
         if let Some(r) = &a.result {
             self.check_typeref(f, r);
+            self.check_returned(f, r, None);
         }
 
         let reads = a.effect(EffectKind::Read).is_some();
@@ -654,6 +719,17 @@ impl<'a> Ctx<'a> {
             );
             return;
         };
+        if undo.target.name == a.name.name || target.action.effect(EffectKind::Spend).is_some() {
+            let why = if undo.target.name == a.name.name { "cannot be its own undo" } else { "is undone by an action that spends" };
+            self.diag(
+                "R07",
+                f,
+                undo.target.pos,
+                format!("`{}` {}.", a.name.name, why),
+                "Name a different action that reverses this one and takes no payment.".into(),
+            );
+            return;
+        }
         let Some(result) = &a.result else {
             self.diag(
                 "R07",
@@ -793,7 +869,18 @@ impl<'a> Ctx<'a> {
                 );
                 continue;
             };
-            match w.assignable(&w.resolve_type(fi, &wp.ty), &w.resolve_type(f, &hp.ty), 0) {
+            let (want_ty, have_ty) = (w.resolve_type(fi, &wp.ty), w.resolve_type(f, &hp.ty));
+            if want_ty.returned != have_ty.returned {
+                self.diag(
+                    "R08",
+                    f,
+                    hp.ty.pos,
+                    format!("The parameter `{}` of {} must be `Returned` exactly when `{}` says so.", wp.name.name, whose, iface),
+                    format!("Declare the parameter as `{}: {}`.", wp.name.name, wp.ty.show()),
+                );
+                continue;
+            }
+            match w.assignable(&want_ty, &have_ty, 0) {
                 Ok(()) => {}
                 Err(Why::Untrusted) => self.diag(
                     "R05",
@@ -952,6 +1039,44 @@ impl<'a> Ctx<'a> {
     fn check_grant(&mut self, f: usize, g: &Grant) {
         let w = self.w;
         self.need_doc(f, &g.doc, "grant", &g.name);
+        // R17. Two rules that could count the same call would give it two budgets.
+        let target_of = |rule: &Rule| {
+            let tf = w.file_of(f, &rule.target.alias)?;
+            match w.find_decl(tf, &rule.target.name.name)? {
+                Decl::Interface(_) => Some((tf, rule.target.name.name.clone(), None)),
+                Decl::Service(s) => Some((tf, rule.target.name.name.clone(), Some(s))),
+                _ => None,
+            }
+        };
+        for (i, later) in g.rules.iter().enumerate() {
+            for earlier in &g.rules[..i] {
+                if earlier.action.name != later.action.name || earlier.ask != later.ask {
+                    continue;
+                }
+                let (Some(a), Some(b)) = (target_of(earlier), target_of(later)) else {
+                    continue;
+                };
+                let implements = |s: &Service, sf: usize, iface: &(usize, String, Option<&Service>)| {
+                    s.implements.iter().any(|q| q.name.name == iface.1 && w.file_of(sf, &q.alias) == Some(iface.0))
+                };
+                let overlap = match (a.2, b.2) {
+                    (None, None) => true, // Two interfaces: one service may implement both.
+                    (Some(_), Some(_)) => a.0 == b.0 && a.1 == b.1,
+                    (Some(s), None) => implements(s, a.0, &b),
+                    (None, Some(s)) => implements(s, b.0, &a),
+                };
+                if overlap {
+                    let word = if later.ask { "ask" } else { "allow" };
+                    self.diag(
+                        "R17",
+                        f,
+                        later.pos,
+                        format!("Two `{}` rules can cover the same call to `{}`, so their limits would add up.", word, later.action.name),
+                        "Merge them into one rule. One `allow` rule and one `ask` rule for the same action is fine.".into(),
+                    );
+                }
+            }
+        }
         for rule in &g.rules {
             let Some(tf) = self.alias_file(f, &rule.target.alias) else {
                 continue;
@@ -993,7 +1118,27 @@ impl<'a> Ctx<'a> {
             let action = found.action;
             let full = format!("{}.{}", rule.target.show(), action.name.name);
             let mut accepted_irreversible = false;
+            let mut seen_words: Vec<&str> = Vec::new();
             for cond in &rule.conds {
+                let word = match cond {
+                    Cond::Spend(_, pos) => Some(("spend", *pos)),
+                    Cond::Times(_, pos) => Some(("times", *pos)),
+                    Cond::Service(_, pos) => Some(("service", *pos)),
+                    Cond::Irreversible(pos) => Some(("irreversible", *pos)),
+                    Cond::Param { .. } => None,
+                };
+                if let Some((word, pos)) = word {
+                    if seen_words.contains(&word) {
+                        self.diag(
+                            "R10",
+                            f,
+                            pos,
+                            format!("This rule has two `{}` conditions.", word),
+                            format!("Keep one `{}` condition.", word),
+                        );
+                    }
+                    seen_words.push(word);
+                }
                 match cond {
                     Cond::Irreversible(_) => accepted_irreversible = true,
                     Cond::Spend(limit, pos) => match action.effect(EffectKind::Spend) {

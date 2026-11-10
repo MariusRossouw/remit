@@ -1,0 +1,26 @@
+type Slot { id: Text }
+type Booking { id: Text  slot: Slot }
+
+"A place that takes table bookings."
+interface Restaurant {
+  "Find free tables."
+  action findTables() -> List<Slot>
+    effects: read
+
+  "Reserve a table the restaurant offered."
+  action book(slot: Returned<Slot>) -> Booking
+    effects: write
+    undo: cancel
+
+  "Cancel a booking."
+  action cancel(booking: Booking)
+    effects: write
+}
+
+"A restaurant that takes any slot."
+service Bistro implements Restaurant {
+  "Reserve a table."
+  action book(slot: Slot) -> Booking
+    effects: write
+    undo: cancel
+}
