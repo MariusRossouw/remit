@@ -2,7 +2,7 @@
 
 **A language and runtime for software that is safe to run without reading it.**
 
-Status: early. The [language specification](SPEC.md) is a first draft and nothing runs yet.
+Status: early. The [language specification](SPEC.md) is a first draft. A checker for it works today. Nothing enforces a contract at run time yet.
 
 ## The problem
 
@@ -50,6 +50,18 @@ From that one declaration the toolchain produces:
 
 The implementation behind the contract can be written by an agent and never read by a person. It cannot do more than the contract allows.
 
+## Try it
+
+You need [Rust](https://rustup.rs).
+
+```
+cargo run -- check examples/dinner/*.remit
+cargo run -- explain examples/dinner/friday-dinner.remit
+cargo run -- check --json tests/bad/R11-irreversible-allowed.remit
+```
+
+`check` applies the rules in the specification and reports each problem with a suggested fix. `explain` prints a grant in plain language, using only the words in the contracts.
+
 ## Principles
 
 1. **Contracts are durable; code is disposable.** A person reads twenty lines of what. Machines write and check the two thousand lines of how.
@@ -75,6 +87,7 @@ The implementation behind the contract can be written by an agent and never read
 - [The dinner scenario](docs/scenario.md): one use case worked end to end.
 - [Positioning](docs/positioning.md): what exists already and where Remit fits.
 - [Roadmap](docs/roadmap.md): goals, milestones, and how we reach agents and new builders.
+- [Evidence](bench/README.md): how each claim is measured against existing alternatives, and the results so far.
 - [Design 0001: Shared vocabularies](docs/design/0001-shared-vocabularies.md): who defines `Restaurant`, and why a grant against it is safe.
 
 ## Contributing

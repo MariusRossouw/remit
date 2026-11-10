@@ -1,0 +1,1 @@
+type Booking { slot: dining.Slot }

@@ -1,0 +1,27 @@
+// Everything here is a legal way to do less than the interface allows.
+type Receipt { id: Text }
+type FullReceipt { id: Text  paidAt: DateTime  note: Untrusted<Text>? }
+enum Size { small, large }
+
+"A shop with a price cap and a day to change your mind."
+interface Shop {
+  "Buy the item."
+  action buy(item: Text, note: Untrusted<Text>) -> Receipt
+    effects: write, spend(max: 100.50 ZAR)
+    undo: refund within 24h
+
+  "Refund a purchase."
+  action refund(receipt: Receipt)
+    effects: write
+}
+
+"A cheaper shop with a week to change your mind."
+service Corner implements Shop {
+  uses stock: Store
+  uses supplier: Http("https://supplier.example")
+
+  "Buy the item. Never more than R80."
+  action buy(item: Text, note: Untrusted<Text>, size: Size?) -> FullReceipt
+    effects: spend(max: 80 ZAR)
+    undo: refund within 7d
+}

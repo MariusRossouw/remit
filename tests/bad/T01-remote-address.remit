@@ -1,0 +1,2 @@
+use dining from "example.org/dining"
+type Mine { id: Text }

@@ -2,7 +2,7 @@
 
 This is the whole language. It must stay under 8,000 tokens.
 
-Status: draft. No checker exists yet. Version 0 will change without notice.
+Status: draft. Version 0 will change without notice. The checker in this repository implements every rule below except R12, and does not yet fetch addresses from a host.
 
 ## 1. What a contract is
 
@@ -51,7 +51,8 @@ interface Restaurant {
 - Source is UTF-8. Whitespace separates tokens and has no other meaning.
 - Comments run from `//` to the end of the line.
 - Type, interface, service, and grant names start with an upper-case letter. All other names start with a lower-case letter.
-- A string is written in double quotes. `\"` and `\\` are the only escapes.
+- A string is written in double quotes on one line. `\"` and `\\` are the only escapes.
+- Built-in type names cannot be declared again. A parameter cannot be called `spend`, `times`, `service`, or `irreversible`, because those words have a meaning in a grant.
 - Literals:
 
 | Kind | Form | Example |
@@ -146,7 +147,8 @@ Effects are an upper bound on what an action may do. Undo is a promise about wha
 
 A file is a unit. `use dining from "example.org/dining"` makes its declarations available as `dining.Name`.
 
-- An address is a relative path beginning with `./`, or a host and path.
+- An address is a relative path beginning with `./` or `../`, or a host and path.
+- Files may not use each other in a cycle.
 - The checker records the content hash of each address the first time it is fetched, in `remit.lock`. Later fetches must match.
 - An interface's identity is the hash of its canonical form, including its descriptions and every type it refers to. Canonical form is not yet specified.
 
@@ -221,6 +223,7 @@ grant FridayDinner {
 
 | Code | Rule |
 | --- | --- |
+| R00 | The file does not follow the grammar |
 | R01 | A name does not resolve, or is declared twice |
 | R02 | A name has the wrong case for its kind |
 | R03 | A required description is missing or empty |
@@ -233,6 +236,8 @@ grant FridayDinner {
 | R10 | A grant condition has the wrong type, or `spend <=` is on an action that does not spend |
 | R11 | An `allow` rule covers an irreversible action without `irreversible` |
 | R12 | A fetched file does not match `remit.lock` |
+| R13 | Files use each other in a cycle |
+| R14 | A name collides with a built-in |
 
 Every error is reported as structured data: code, location, the rule in one sentence, and a suggested fix.
 

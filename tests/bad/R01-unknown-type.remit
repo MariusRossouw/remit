@@ -1,0 +1,2 @@
+type Booking { slot: Slott }
+type Slot { id: Text }

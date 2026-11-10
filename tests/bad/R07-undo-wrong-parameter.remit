@@ -1,0 +1,13 @@
+type Note { id: Text }
+
+"A notebook."
+interface Notes {
+  "Save a note."
+  action save(body: Text) -> Note
+    effects: write
+    undo: remove
+
+  "Remove a note."
+  action remove(id: Text)
+    effects: write
+}

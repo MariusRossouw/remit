@@ -1,0 +1,5 @@
+use d from "./lib/dining.remit"
+"Look for tables."
+grant Look {
+  allow d.Restaurant.findTables
+}

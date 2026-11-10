@@ -1,0 +1,527 @@
+{
+  "tools": [
+    {
+      "name": "findTables",
+      "description": "Find free tables for a date and party size.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "party": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "party"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Slot"
+            }
+          }
+        },
+        "required": [
+          "slots"
+        ],
+        "$defs": {
+          "Slot": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "seats": {
+                "type": "integer"
+              },
+              "deposit": {
+                "$ref": "#/$defs/Money"
+              }
+            },
+            "required": [
+              "id",
+              "start",
+              "seats",
+              "deposit"
+            ]
+          },
+          "Money": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "amount",
+              "currency"
+            ]
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "reviews",
+      "description": "Read what other guests wrote.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Review"
+            }
+          }
+        },
+        "required": [
+          "reviews"
+        ],
+        "$defs": {
+          "Review": {
+            "type": "object",
+            "properties": {
+              "rating": {
+                "type": "integer"
+              },
+              "body": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rating",
+              "body"
+            ]
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "book",
+      "description": "Reserve a table. May take a deposit.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "$ref": "#/$defs/Slot"
+          },
+          "guest": {
+            "$ref": "#/$defs/Contact"
+          }
+        },
+        "required": [
+          "slot",
+          "guest"
+        ],
+        "$defs": {
+          "Slot": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "seats": {
+                "type": "integer"
+              },
+              "deposit": {
+                "$ref": "#/$defs/Money"
+              }
+            },
+            "required": [
+              "id",
+              "start",
+              "seats",
+              "deposit"
+            ]
+          },
+          "Money": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "amount",
+              "currency"
+            ]
+          },
+          "Contact": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slot": {
+            "$ref": "#/$defs/Slot"
+          },
+          "guest": {
+            "$ref": "#/$defs/Contact"
+          }
+        },
+        "required": [
+          "id",
+          "slot",
+          "guest"
+        ],
+        "$defs": {
+          "Slot": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "seats": {
+                "type": "integer"
+              },
+              "deposit": {
+                "$ref": "#/$defs/Money"
+              }
+            },
+            "required": [
+              "id",
+              "start",
+              "seats",
+              "deposit"
+            ]
+          },
+          "Money": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "amount",
+              "currency"
+            ]
+          },
+          "Contact": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "cancel",
+      "description": "Cancel a booking and return its deposit.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "booking": {
+            "$ref": "#/$defs/Booking"
+          }
+        },
+        "required": [
+          "booking"
+        ],
+        "$defs": {
+          "Booking": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "slot": {
+                "$ref": "#/$defs/Slot"
+              },
+              "guest": {
+                "$ref": "#/$defs/Contact"
+              }
+            },
+            "required": [
+              "id",
+              "slot",
+              "guest"
+            ]
+          },
+          "Slot": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "seats": {
+                "type": "integer"
+              },
+              "deposit": {
+                "$ref": "#/$defs/Money"
+              }
+            },
+            "required": [
+              "id",
+              "start",
+              "seats",
+              "deposit"
+            ]
+          },
+          "Money": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "amount",
+              "currency"
+            ]
+          },
+          "Contact": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "request",
+      "description": "Ask someone to pay you. They decide whether to pay.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string"
+          },
+          "amount": {
+            "$ref": "#/$defs/Money"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "to",
+          "amount",
+          "reason"
+        ],
+        "$defs": {
+          "Money": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "amount",
+              "currency"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "amount": {
+            "$ref": "#/$defs/Money"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "to",
+          "amount",
+          "reason"
+        ],
+        "$defs": {
+          "Money": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "amount",
+              "currency"
+            ]
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "cancelRequest",
+      "description": "Withdraw a request for money.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "$ref": "#/$defs/Request"
+          }
+        },
+        "required": [
+          "request"
+        ],
+        "$defs": {
+          "Request": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "amount": {
+                "$ref": "#/$defs/Money"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "to",
+              "amount",
+              "reason"
+            ]
+          },
+          "Money": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string"
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "amount",
+              "currency"
+            ]
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    }
+  ]
+}

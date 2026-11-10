@@ -9,4 +9,4 @@ The contracts behind [the dinner scenario](../../docs/scenario.md), written in [
 | `bistro.remit` | A service that implements `Restaurant` and tightens its spend limit |
 | `friday-dinner.remit` | The grant Thandi gives her agent |
 
-No checker exists yet, so nothing has verified these files.
+All four pass the checker: `cargo run -- check examples/dinner/*.remit`.

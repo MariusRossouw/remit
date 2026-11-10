@@ -1,0 +1,2 @@
+use b from "./lib/cycle-b.remit"
+type A { id: Text }

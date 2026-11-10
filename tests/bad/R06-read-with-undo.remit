@@ -1,0 +1,11 @@
+"A notebook."
+interface Notes {
+  "Read a note."
+  action get(id: Text) -> Text
+    effects: read
+    undo: forget
+
+  "Forget a note."
+  action forget(body: Text)
+    effects: write
+}

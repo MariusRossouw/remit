@@ -1,0 +1,13 @@
+"A notebook."
+interface Notes {
+  "Read a note."
+  action get(id: Text) -> Text
+    effects: read
+}
+
+"A notebook that shows what strangers wrote."
+service Wall implements Notes {
+  "Read a note."
+  action get(id: Text) -> Untrusted<Text>
+    effects: read
+}

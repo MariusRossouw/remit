@@ -1,0 +1,1 @@
+type Comment { body: Text  replies: List<Comment> }

@@ -1,0 +1,13 @@
+"A mailer."
+interface Mail {
+  "Send an email. It cannot be recalled."
+  action send(to: Text, body: Text)
+    effects: send
+}
+
+"Email the team, once, accepting it cannot be recalled."
+grant Announce {
+  allow Mail.send where times <= 1, irreversible
+  ask Mail.send where to in ["board"]
+  expires 2026-11-13T23:59+02:00
+}

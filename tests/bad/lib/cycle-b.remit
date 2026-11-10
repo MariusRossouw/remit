@@ -1,0 +1,2 @@
+use a from "../R13-cycle.remit"
+type B { id: Text }

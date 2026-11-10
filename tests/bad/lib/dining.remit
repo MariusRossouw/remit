@@ -1,0 +1,26 @@
+// A vocabulary for restaurants. Anyone may implement it.
+
+type Slot    { id: Text  start: DateTime  seats: Int  deposit: Money }
+type Contact { name: Text  phone: Text? }
+type Booking { id: Text  slot: Slot  guest: Contact }
+type Review  { rating: Int  body: Untrusted<Text> }
+
+"A place that takes table bookings."
+interface Restaurant {
+  "Find free tables for a date and party size."
+  action findTables(date: Date, party: Int) -> List<Slot>
+    effects: read
+
+  "Read what other guests wrote."
+  action reviews() -> List<Review>
+    effects: read
+
+  "Reserve a table. May take a deposit."
+  action book(slot: Slot, guest: Contact) -> Booking
+    effects: write, spend
+    undo: cancel
+
+  "Cancel a booking and return its deposit."
+  action cancel(booking: Booking)
+    effects: write
+}

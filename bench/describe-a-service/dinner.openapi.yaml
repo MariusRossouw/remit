@@ -1,0 +1,144 @@
+openapi: 3.1.0
+info:
+  title: Dinner
+  version: "0"
+paths:
+  /tables:
+    get:
+      operationId: findTables
+      summary: Find free tables for a date and party size.
+      parameters:
+        - {name: date, in: query, required: true, schema: {type: string, format: date}}
+        - {name: party, in: query, required: true, schema: {type: integer}}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/Slot"}}
+  /reviews:
+    get:
+      operationId: reviews
+      summary: Read what other guests wrote.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/Review"}}
+  /bookings:
+    post:
+      operationId: book
+      summary: Reserve a table. May take a deposit.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slot, guest]
+              properties:
+                slot: {$ref: "#/components/schemas/Slot"}
+                guest: {$ref: "#/components/schemas/Contact"}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Booking"}
+  /bookings/cancel:
+    post:
+      operationId: cancel
+      summary: Cancel a booking and return its deposit.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [booking]
+              properties:
+                booking: {$ref: "#/components/schemas/Booking"}
+      responses:
+        "204":
+          description: OK
+  /requests:
+    post:
+      operationId: request
+      summary: Ask someone to pay you. They decide whether to pay.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, amount, reason]
+              properties:
+                to: {type: string}
+                amount: {$ref: "#/components/schemas/Money"}
+                reason: {type: string}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Request"}
+  /requests/cancel:
+    post:
+      operationId: cancelRequest
+      summary: Withdraw a request for money.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [request]
+              properties:
+                request: {$ref: "#/components/schemas/Request"}
+      responses:
+        "204":
+          description: OK
+components:
+  schemas:
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount: {type: string}
+        currency: {type: string}
+    Slot:
+      type: object
+      required: [id, start, seats, deposit]
+      properties:
+        id: {type: string}
+        start: {type: string, format: date-time}
+        seats: {type: integer}
+        deposit: {$ref: "#/components/schemas/Money"}
+    Contact:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string}
+        phone: {type: string}
+    Booking:
+      type: object
+      required: [id, slot, guest]
+      properties:
+        id: {type: string}
+        slot: {$ref: "#/components/schemas/Slot"}
+        guest: {$ref: "#/components/schemas/Contact"}
+    Review:
+      type: object
+      required: [rating, body]
+      properties:
+        rating: {type: integer}
+        body: {type: string}
+    Request:
+      type: object
+      required: [id, to, amount, reason]
+      properties:
+        id: {type: string}
+        to: {type: string}
+        amount: {$ref: "#/components/schemas/Money"}
+        reason: {type: string}

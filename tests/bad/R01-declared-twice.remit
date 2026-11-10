@@ -1,0 +1,2 @@
+type Slot { id: Text }
+type Slot { start: DateTime }

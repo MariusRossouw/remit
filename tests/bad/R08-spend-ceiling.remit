@@ -1,0 +1,21 @@
+type Receipt { id: Text }
+
+"A shop with a price cap."
+interface Shop {
+  "Buy the item."
+  action buy(item: Text) -> Receipt
+    effects: spend(max: 100 ZAR)
+    undo: refund
+
+  "Refund a purchase."
+  action refund(receipt: Receipt)
+    effects: write
+}
+
+"A shop that charges more than the cap."
+service Pricey implements Shop {
+  "Buy the item."
+  action buy(item: Text) -> Receipt
+    effects: spend(max: 200 ZAR)
+    undo: refund
+}

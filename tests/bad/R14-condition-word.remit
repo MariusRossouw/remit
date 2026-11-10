@@ -1,0 +1,6 @@
+"A counter."
+interface Counter {
+  "Add to the counter."
+  action add(times: Int)
+    effects: read
+}

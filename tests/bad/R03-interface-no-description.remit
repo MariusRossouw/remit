@@ -1,0 +1,5 @@
+interface Notes {
+  "Read the notes."
+  action list() -> List<Text>
+    effects: read
+}

@@ -79,7 +79,7 @@ Speed of building, and speed for agents in tokens and round trips, are not in th
 
 ## The decision test
 
-Every design proposal answers these, in writing.
+Every design proposal answers these, in writing. The rules for comparisons are in [bench](../bench/README.md).
 
 | Question | A proposal fails if |
 | --- | --- |
@@ -89,6 +89,7 @@ Every design proposal answers these, in writing.
 | What does it add to the specification, and what does it remove? | It grows the language with no accounting |
 | Can an agent holding only the specification use it correctly first time? | It needs explanation the specification does not contain |
 | Does it work without us? | It relies on a service or registry one party runs |
+| What is it measured against? | It claims an improvement with no comparison against the strongest existing alternative, or the comparison cannot be rerun |
 | Can it be undone later? | It is permanent and has had no more scrutiny than a reversible change |
 
 ## Changing this document

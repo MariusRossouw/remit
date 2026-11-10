@@ -1,0 +1,7 @@
+use d from "./lib/dining.remit"
+
+"Look for tables."
+grant Look {
+  allow d.Restaurant.findTables where spend <= 500 ZAR
+  expires 2026-11-13T23:59+02:00
+}

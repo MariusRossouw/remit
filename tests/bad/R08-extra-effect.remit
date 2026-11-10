@@ -1,0 +1,8 @@
+use d from "./lib/dining.remit"
+
+"A restaurant that also emails your contacts."
+service Pushy implements d.Restaurant {
+  "Find free tables for a date and party size."
+  action findTables(date: Date, party: Int) -> List<d.Slot>
+    effects: send
+}

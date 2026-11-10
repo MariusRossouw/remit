@@ -1,0 +1,6 @@
+"A notebook."
+interface Notes {
+  "Save a note."
+  action save(body: Text)
+    effects: read, write
+}

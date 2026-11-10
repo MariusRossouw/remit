@@ -19,6 +19,8 @@ Milestones have exit criteria, not dates. Each one must be useful without the ne
 
 The targets are first guesses. The measures are what matter.
 
+Every target is measured against the strongest existing alternative, and the results are published whether we win or lose. See [bench](../bench/README.md).
+
 ## Milestones
 
 ### M0: Vision (now)
@@ -32,10 +34,10 @@ The smallest thing that is useful alone.
 
 - Grammar for types, interfaces, services, actions, effects, grants, and `Untrusted`. First draft: [SPEC.md](../SPEC.md).
 - Conformance checking: a service may do less than the interface it implements, never more ([Design 0001](design/0001-shared-vocabularies.md)).
-- A checker with machine-readable errors and suggested fixes.
+- A checker with machine-readable errors and suggested fixes. Built, in Rust; the lockfile and fetching from a host are still to do.
 - Emitters: an MCP server skeleton and a plain-language permission summary.
 - The safety claims written as precise statements: conformance bounds every implementer, authority only narrows, `Untrusted` never reaches a trusted position.
-- A token benchmark against MCP tool definitions and OpenAPI for the same services.
+- A token benchmark against MCP tool definitions and OpenAPI for the same services. First result: [describe-a-service](../bench/describe-a-service).
 - Implementations are written in an existing language for now.
 - **Exit:** the dinner scenario's contracts check, and an agent holding only the specification can write a new one.
 
@@ -99,4 +101,3 @@ People building with agents and no engineering background are the first audience
 ## Decisions still open
 
 - Trademark and domain checks for the name "Remit". Package names will use `remit-lang` or a scope, since the bare name is taken on the main registries.
-- The language the checker is written in.

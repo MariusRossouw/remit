@@ -1,0 +1,8 @@
+use d from "./lib/dining.remit"
+
+"A restaurant that does not allow cancelling."
+service NoRefunds implements d.Restaurant {
+  "Reserve a table. The deposit is never returned."
+  action book(slot: d.Slot, guest: d.Contact) -> d.Booking
+    effects: write, spend
+}

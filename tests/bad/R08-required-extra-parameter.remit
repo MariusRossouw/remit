@@ -1,0 +1,8 @@
+use d from "./lib/dining.remit"
+
+"A restaurant that demands a card number."
+service Nosy implements d.Restaurant {
+  "Find free tables for a date and party size."
+  action findTables(date: Date, party: Int, card: Text) -> List<d.Slot>
+    effects: read
+}
