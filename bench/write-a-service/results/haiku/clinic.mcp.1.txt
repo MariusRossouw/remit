@@ -1,0 +1,209 @@
+```json
+{
+  "tools": [
+    {
+      "name": "findSlots",
+      "description": "Returns the available appointment slots for the given day. Read-only; changes no data.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "description": "The day to search for slots, as an ISO 8601 date (YYYY-MM-DD)."
+          }
+        },
+        "required": ["day"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "array",
+        "description": "The slots available on the requested day.",
+        "items": {
+          "$ref": "#/$defs/Slot"
+        },
+        "$defs": {
+          "Slot": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "doctor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": ["id", "start", "doctor"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "book",
+      "description": "Books the given slot for the given patient and returns the resulting Appointment. Changes data. The booking can be undone with the cancel tool.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "slot": {
+            "$ref": "#/$defs/Slot",
+            "description": "The slot to book, as returned by findSlots."
+          },
+          "patient": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The name or identifier of the patient the appointment is for."
+          }
+        },
+        "required": ["slot", "patient"],
+        "additionalProperties": false,
+        "$defs": {
+          "Slot": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "doctor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": ["id", "start", "doctor"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$ref": "#/$defs/Appointment",
+        "$defs": {
+          "Slot": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "doctor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": ["id", "start", "doctor"],
+            "additionalProperties": false
+          },
+          "Appointment": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "slot": {
+                "$ref": "#/$defs/Slot"
+              },
+              "patient": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": ["id", "slot", "patient"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false
+      },
+      "x-undoneBy": "cancel"
+    },
+    {
+      "name": "cancel",
+      "description": "Cancels the given appointment. Changes data. This action is permanent and cannot be undone. Returns nothing.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "appointment": {
+            "$ref": "#/$defs/Appointment",
+            "description": "The appointment to cancel, as returned by book."
+          }
+        },
+        "required": ["appointment"],
+        "additionalProperties": false,
+        "$defs": {
+          "Slot": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "doctor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": ["id", "start", "doctor"],
+            "additionalProperties": false
+          },
+          "Appointment": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "slot": {
+                "$ref": "#/$defs/Slot"
+              },
+              "patient": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": ["id", "slot", "patient"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true
+      },
+      "x-undoable": false
+    }
+  ]
+}
+```

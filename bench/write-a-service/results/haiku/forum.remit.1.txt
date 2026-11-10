@@ -1,0 +1,28 @@
+```
+"A member's post on a discussion board."
+type Post {
+  id: Text
+  author: Text
+  body: Untrusted<Text>
+}
+
+"A discussion board. Members publish posts under topics and report posts to moderators."
+interface Forum {
+  "Read the posts under a topic."
+  action listPosts(topic: Text) -> List<Post>
+    effects: read
+
+  "Add a post under a topic. Can be undone with remove."
+  action publish(topic: Text, body: Text) -> Post
+    effects: write
+    undo: remove
+
+  "Delete a post. Cannot be undone."
+  action remove(post: Post)
+    effects: write
+
+  "Tell the moderators about a post. Changes nothing else and cannot be undone."
+  action report(postId: Text, reason: Text)
+    effects: send
+}
+```

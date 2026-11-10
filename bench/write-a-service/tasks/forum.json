@@ -1,0 +1,55 @@
+{
+  "id": "forum",
+  "name": "Forum",
+  "brief": "Service: Forum. A discussion board.\n\nData:\n- Post: id (text), author (text), body (text written by members, not by this service)\n\nActions:\n- listPosts(topic: text) returns a list of Post. Only reads.\n- publish(topic: text, body: text) returns a Post. Changes data. Can be undone with remove.\n- remove(post: Post) returns nothing. Changes data. Cannot be undone.\n- report(postId: text, reason: text) returns nothing. Contacts the moderators on the caller's behalf and changes nothing else. Cannot be undone.\n\nUse exactly these action, parameter, type, and field names.",
+  "actions": [
+    {
+      "name": "listPosts",
+      "params": [
+        "topic"
+      ],
+      "effects": [
+        "read"
+      ],
+      "undo": null
+    },
+    {
+      "name": "publish",
+      "params": [
+        "topic",
+        "body"
+      ],
+      "effects": [
+        "write"
+      ],
+      "undo": "remove"
+    },
+    {
+      "name": "remove",
+      "params": [
+        "post"
+      ],
+      "effects": [
+        "write"
+      ],
+      "undo": null
+    },
+    {
+      "name": "report",
+      "params": [
+        "postId",
+        "reason"
+      ],
+      "effects": [
+        "send"
+      ],
+      "undo": null
+    }
+  ],
+  "untrusted": [
+    [
+      "Post",
+      "body"
+    ]
+  ]
+}

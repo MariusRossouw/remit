@@ -104,3 +104,20 @@ fn an_irreversible_action_is_called_out_when_explained() {
     assert!(text.contains("CANNOT BE UNDONE"), "{}", text);
     assert!(text.contains("Allowed only after you confirm each time:"), "{}", text);
 }
+
+#[test]
+fn a_service_lists_inherited_and_own_actions() {
+    let mut read = |p: &str| fs::read_to_string(p).map_err(|e| e.to_string());
+    let world = remit::load(&["examples/dinner/bistro.remit".to_string()], &mut read);
+    let json = remit::list::list(&world, world.entries[0]);
+    for expected in [
+        "\"name\":\"Bistro\"",
+        "\"implements\":[\"dining.Restaurant\"]",
+        "\"name\":\"findTables\"",
+        "\"name\":\"todaysSpecials\"",
+        "{\"kind\":\"spend\",\"max\":\"500 ZAR\"}",
+        "\"undo\":{\"action\":\"cancel\",\"within\":null}",
+    ] {
+        assert!(json.contains(expected), "missing {} in {}", expected, json);
+    }
+}

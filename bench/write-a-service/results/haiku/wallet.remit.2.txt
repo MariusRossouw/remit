@@ -1,0 +1,32 @@
+```
+// Wallet contract, Remit version 0.
+
+"The wallet's balance."
+type Balance { amount: Money }
+
+"A completed payment from the caller to another party."
+type Transfer { id: Text  to: Text  amount: Money }
+
+"A request for money sent to a payer. It can be withdrawn."
+type MoneyRequest { id: Text  payer: Text  amount: Money }
+
+"A wallet for sending and requesting money."
+interface Wallet {
+  "Read the current balance."
+  action balance() -> Balance
+    effects: read
+
+  "Send money to a party. Never more than 1000 ZAR in one call. Cannot be undone."
+  action transfer(to: Text, amount: Money, note: Text?) -> Transfer
+    effects: spend(max: 1000 ZAR)
+
+  "Ask a payer for money. Contacts the payer on the caller's behalf and changes nothing else."
+  action requestMoney(payer: Text, amount: Money) -> MoneyRequest
+    effects: send
+    undo: withdrawRequest
+
+  "Withdraw a money request. Contacts the payer on the caller's behalf and changes nothing else. Cannot be undone."
+  action withdrawRequest(request: MoneyRequest)
+    effects: send
+}
+```

@@ -1,0 +1,40 @@
+```
+"The balance held in the wallet."
+type Balance {
+  amount: Money
+}
+
+"A payment that was sent."
+type Transfer {
+  id: Text
+  to: Text
+  amount: Money
+}
+
+"A request asking someone to pay money."
+type MoneyRequest {
+  id: Text
+  payer: Text
+  amount: Money
+}
+
+"A wallet for sending and requesting money."
+interface Wallet {
+  "Read the current balance. Changes nothing."
+  action balance() -> Balance
+    effects: read
+
+  "Send a payment to someone. Never more than 1000 ZAR in one call. Cannot be undone."
+  action transfer(to: Text, amount: Money, note: Text?) -> Transfer
+    effects: spend(max: 1000 ZAR)
+
+  "Ask someone to pay you. Contacts the payer on your behalf and changes nothing else. Can be undone with withdrawRequest."
+  action requestMoney(payer: Text, amount: Money) -> MoneyRequest
+    effects: send
+    undo: withdrawRequest
+
+  "Withdraw a money request. Contacts the payer on your behalf and changes nothing else. Cannot be undone."
+  action withdrawRequest(request: MoneyRequest)
+    effects: send
+}
+```

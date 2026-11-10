@@ -1,0 +1,35 @@
+```
+enum DeviceKind { light, lock, thermostat }
+
+type Device {
+  id: Text
+  name: Text
+  kind: DeviceKind
+}
+
+type Setting {
+  deviceId: Text
+  previous: Decimal
+  current: Decimal
+}
+
+"Controls devices in a house."
+interface Home {
+  "List all devices in the house."
+  action listDevices() -> List<Device>
+    effects: read
+
+  "Set a thermostat to a temperature in degrees Celsius. Can be undone with restore for one hour."
+  action setTemperature(deviceId: Text, celsius: Decimal) -> Setting
+    effects: write
+    undo: restore within 1h
+
+  "Put a thermostat back to the previous temperature recorded in a setting. This cannot be undone."
+  action restore(setting: Setting)
+    effects: write
+
+  "Unlock a lock for a number of minutes. This cannot be undone."
+  action unlock(deviceId: Text, minutes: Int)
+    effects: write
+}
+```

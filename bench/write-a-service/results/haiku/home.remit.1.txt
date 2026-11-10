@@ -1,0 +1,30 @@
+```remit
+"A kind of device in the house."
+enum DeviceKind { light, lock, thermostat }
+
+"A device in the house."
+type Device { id: Text  name: Text  kind: DeviceKind }
+
+"A temperature change made to a device, with the value it replaced."
+type Setting { deviceId: Text  previous: Decimal  current: Decimal }
+
+"Controls devices in a house."
+interface Home {
+  "List every device in the house."
+  action listDevices() -> List<Device>
+    effects: read
+
+  "Set a device's temperature in degrees Celsius. Can be undone with restore for one hour afterwards."
+  action setTemperature(deviceId: Text, celsius: Decimal) -> Setting
+    effects: write
+    undo: restore within 1h
+
+  "Put back the value recorded in a Setting. Cannot be undone."
+  action restore(setting: Setting)
+    effects: write
+
+  "Unlock a device for a number of minutes. Cannot be undone."
+  action unlock(deviceId: Text, minutes: Int)
+    effects: write
+}
+```

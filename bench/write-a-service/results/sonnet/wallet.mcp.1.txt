@@ -1,0 +1,181 @@
+```json
+{
+  "tools": [
+    {
+      "name": "balance",
+      "description": "Get the current wallet balance. Only reads; changes nothing and contacts no one.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "description": "Balance",
+        "properties": {
+          "amount": {
+            "type": "object",
+            "description": "Money: the current balance.",
+            "properties": {
+              "value": { "type": "number", "description": "Numeric amount." },
+              "currency": { "type": "string", "description": "ISO 4217 currency code, e.g. ZAR." }
+            },
+            "required": ["value", "currency"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["amount"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "transfer",
+      "description": "Send a payment to a recipient. Takes payment from the wallet, never more than 1000 ZAR in one call, and does nothing else. Cannot be undone.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "to": { "type": "string", "description": "Recipient of the payment." },
+          "amount": {
+            "type": "object",
+            "description": "Money to send. Must be in ZAR and no more than 1000 per call.",
+            "properties": {
+              "value": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1000,
+                "description": "Numeric amount, greater than 0 and at most 1000."
+              },
+              "currency": { "type": "string", "const": "ZAR", "description": "Currency code; only ZAR is accepted." }
+            },
+            "required": ["value", "currency"],
+            "additionalProperties": false
+          },
+          "note": { "type": "string", "description": "Optional note to accompany the transfer." }
+        },
+        "required": ["to", "amount"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "description": "Transfer",
+        "properties": {
+          "id": { "type": "string", "description": "Transfer identifier." },
+          "to": { "type": "string", "description": "Recipient of the payment." },
+          "amount": {
+            "type": "object",
+            "description": "Money that was sent.",
+            "properties": {
+              "value": { "type": "number", "description": "Numeric amount." },
+              "currency": { "type": "string", "description": "ISO 4217 currency code, e.g. ZAR." }
+            },
+            "required": ["value", "currency"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "to", "amount"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false
+      }
+    },
+    {
+      "name": "requestMoney",
+      "description": "Request money from a payer. Contacts the payer on the caller's behalf and changes nothing else. Can be undone with withdrawRequest.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "payer": { "type": "string", "description": "Person being asked to pay." },
+          "amount": {
+            "type": "object",
+            "description": "Money being requested.",
+            "properties": {
+              "value": { "type": "number", "exclusiveMinimum": 0, "description": "Numeric amount, greater than 0." },
+              "currency": { "type": "string", "description": "ISO 4217 currency code, e.g. ZAR." }
+            },
+            "required": ["value", "currency"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["payer", "amount"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "description": "MoneyRequest",
+        "properties": {
+          "id": { "type": "string", "description": "Request identifier." },
+          "payer": { "type": "string", "description": "Person being asked to pay." },
+          "amount": {
+            "type": "object",
+            "description": "Money requested.",
+            "properties": {
+              "value": { "type": "number", "description": "Numeric amount." },
+              "currency": { "type": "string", "description": "ISO 4217 currency code, e.g. ZAR." }
+            },
+            "required": ["value", "currency"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "payer", "amount"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false
+      }
+    },
+    {
+      "name": "withdrawRequest",
+      "description": "Withdraw a previously made money request. Contacts the payer on the caller's behalf and changes nothing else. Returns nothing. Cannot be undone.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "request": {
+            "type": "object",
+            "description": "MoneyRequest to withdraw, as returned by requestMoney.",
+            "properties": {
+              "id": { "type": "string", "description": "Request identifier." },
+              "payer": { "type": "string", "description": "Person who was asked to pay." },
+              "amount": {
+                "type": "object",
+                "description": "Money that was requested.",
+                "properties": {
+                  "value": { "type": "number", "description": "Numeric amount." },
+                  "currency": { "type": "string", "description": "ISO 4217 currency code, e.g. ZAR." }
+                },
+                "required": ["value", "currency"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["id", "payer", "amount"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["request"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false
+      }
+    }
+  ]
+}
+```

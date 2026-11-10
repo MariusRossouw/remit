@@ -1,0 +1,1153 @@
+[
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 7590,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "calendar",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 4163,
+  "input_tokens": 977,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 7597,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "calendar",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 3797,
+  "input_tokens": 977,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5951,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "clinic",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 3197,
+  "input_tokens": 919,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 6134,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "clinic",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 2935,
+  "input_tokens": 919,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5271,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "forum",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 3361,
+  "input_tokens": 932,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5269,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "forum",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 3403,
+  "input_tokens": 932,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5391,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "home",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 3298,
+  "input_tokens": 985,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 4391,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "home",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 3053,
+  "input_tokens": 987,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 7388,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "parcels",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 4302,
+  "input_tokens": 960,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 8038,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "parcels",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 4271,
+  "input_tokens": 960,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 6074,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "wallet",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 3910,
+  "input_tokens": 1035,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5327,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "wallet",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 4466,
+  "input_tokens": 1033,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 4613,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "calendar",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 2666,
+  "input_tokens": 895,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5266,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "calendar",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 2771,
+  "input_tokens": 895,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3865,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "clinic",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 1951,
+  "input_tokens": 836,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3103,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "clinic",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 1717,
+  "input_tokens": 836,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 4040,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "forum",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 2053,
+  "input_tokens": 852,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 4228,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "forum",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 3396,
+  "input_tokens": 850,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3833,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "home",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 2450,
+  "input_tokens": 905,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 4170,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "home",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 2395,
+  "input_tokens": 906,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5231,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "parcels",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 3257,
+  "input_tokens": 881,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5055,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "parcels",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 2478,
+  "input_tokens": 881,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 4572,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "wallet",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 2942,
+  "input_tokens": 953,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 4520,
+  "read_only_exact": true,
+  "model": "haiku",
+  "task": "wallet",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 3440,
+  "input_tokens": 954,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 689,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "calendar",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 1661,
+  "input_tokens": 4957,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 735,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "calendar",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 1832,
+  "input_tokens": 4958,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 584,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "clinic",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 1394,
+  "input_tokens": 4901,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 612,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "clinic",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 1384,
+  "input_tokens": 4902,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 686,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "forum",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 1961,
+  "input_tokens": 4912,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 784,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "forum",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 2225,
+  "input_tokens": 4914,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 909,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "home",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 1996,
+  "input_tokens": 4966,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 929,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "home",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 1206,
+  "input_tokens": 4967,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 998,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "parcels",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 1498,
+  "input_tokens": 4945,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 969,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "parcels",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 1934,
+  "input_tokens": 4943,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 1023,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "wallet",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 2346,
+  "input_tokens": 5017,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 1042,
+  "behaviour_exact": true,
+  "model": "haiku",
+  "task": "wallet",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 2459,
+  "input_tokens": 5016,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 7524,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "calendar",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 2945,
+  "input_tokens": 956,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 6920,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "calendar",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 2776,
+  "input_tokens": 954,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5583,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "clinic",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 2184,
+  "input_tokens": 898,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 6301,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "clinic",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 2267,
+  "input_tokens": 897,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5568,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "forum",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 2252,
+  "input_tokens": 911,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5470,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "forum",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 2270,
+  "input_tokens": 912,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 4564,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "home",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 2242,
+  "input_tokens": 965,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 5039,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "home",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 2369,
+  "input_tokens": 964,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 6085,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "parcels",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 2358,
+  "input_tokens": 940,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 7922,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "parcels",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 3075,
+  "input_tokens": 941,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 6908,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "wallet",
+  "format": "mcp",
+  "trial": 1,
+  "output_tokens": 2857,
+  "input_tokens": 1013,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 6418,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "wallet",
+  "format": "mcp",
+  "trial": 2,
+  "output_tokens": 2907,
+  "input_tokens": 1015,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3336,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "calendar",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 1461,
+  "input_tokens": 873,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3378,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "calendar",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 1597,
+  "input_tokens": 875,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 2726,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "clinic",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 1107,
+  "input_tokens": 817,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": false,
+  "complete": false,
+  "why": "not valid OpenAPI: Unevaluated properties are not allowed ('links' was unexpected)",
+  "bytes": 2514,
+  "model": "sonnet",
+  "task": "clinic",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 730,
+  "input_tokens": 817,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3357,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "forum",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 1531,
+  "input_tokens": 831,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3179,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "forum",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 1327,
+  "input_tokens": 830,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3451,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "home",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 1474,
+  "input_tokens": 883,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3392,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "home",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 1489,
+  "input_tokens": 884,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3776,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "parcels",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 1719,
+  "input_tokens": 858,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 3576,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "parcels",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 1468,
+  "input_tokens": 858,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 4196,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "wallet",
+  "format": "openapi",
+  "trial": 1,
+  "output_tokens": 1764,
+  "input_tokens": 931,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 4347,
+  "read_only_exact": true,
+  "model": "sonnet",
+  "task": "wallet",
+  "format": "openapi",
+  "trial": 2,
+  "output_tokens": 1992,
+  "input_tokens": 934,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 820,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "calendar",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 685,
+  "input_tokens": 4939,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 830,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "calendar",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 615,
+  "input_tokens": 4939,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 548,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "clinic",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 411,
+  "input_tokens": 4880,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 548,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "clinic",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 437,
+  "input_tokens": 4880,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 755,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "forum",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 530,
+  "input_tokens": 4892,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 718,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "forum",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 546,
+  "input_tokens": 4891,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 824,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "home",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 722,
+  "input_tokens": 4944,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 798,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "home",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 588,
+  "input_tokens": 4946,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 850,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "parcels",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 554,
+  "input_tokens": 4923,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 859,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "parcels",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 604,
+  "input_tokens": 4922,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 1018,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "wallet",
+  "format": "remit",
+  "trial": 1,
+  "output_tokens": 749,
+  "input_tokens": 4996,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "valid": true,
+  "complete": true,
+  "why": "",
+  "bytes": 861,
+  "behaviour_exact": true,
+  "model": "sonnet",
+  "task": "wallet",
+  "format": "remit",
+  "trial": 2,
+  "output_tokens": 673,
+  "input_tokens": 4997,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ }
+]

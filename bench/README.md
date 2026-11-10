@@ -14,13 +14,13 @@ Remit claims to be better than what exists. Each claim here is measured against 
 
 | Benchmark | Question | State |
 | --- | --- | --- |
-| [describe-a-service](describe-a-service) | How much text does it take to tell an agent what a service does? | First result, one service |
+| [describe-a-service](describe-a-service) | How much text does it take to tell an agent what a service does? | First result, one service. Remit is 2.7 to 4.4 times smaller |
+| [write-a-service](write-a-service) | Can a model write a correct description first try, given only the specification? | First result, six services, two models. A tie on correctness; Remit answers are much smaller but the specification costs input tokens |
 
 ## Planned
 
 | Question | Compared against |
 | --- | --- |
-| Can an agent write a correct service description first try, given only the specification? | MCP tool definitions, OpenAPI |
 | How many model turns does a task take? | Direct tool calling over MCP |
 | What does it cost to authorise one call? | An OAuth token check against an authorisation server |
 | Which attacks get through? | A conventional service with the same features, against a public attack suite |

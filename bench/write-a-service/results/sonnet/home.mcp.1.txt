@@ -1,0 +1,118 @@
+```json
+{
+  "tools": [
+    {
+      "name": "listDevices",
+      "description": "List all devices in the house. Each device has an id, a name, and a kind (light, lock, or thermostat). Only reads; changes nothing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "devices": {
+            "type": "array",
+            "description": "All devices in the house.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "description": "Unique identifier of the device." },
+                "name": { "type": "string", "description": "Human-readable name of the device." },
+                "kind": {
+                  "type": "string",
+                  "enum": ["light", "lock", "thermostat"],
+                  "description": "The kind of device."
+                }
+              },
+              "required": ["id", "name", "kind"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["devices"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "setTemperature",
+      "description": "Set the target temperature of a thermostat device, in degrees Celsius. Changes data. Returns a Setting holding the previous and current values. The change can be undone for one hour afterwards by passing the returned Setting to restore.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "deviceId": { "type": "string", "description": "The id of the thermostat device to change." },
+          "celsius": { "type": "number", "description": "The new target temperature in degrees Celsius." }
+        },
+        "required": ["deviceId", "celsius"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "deviceId": { "type": "string", "description": "The id of the device that was changed." },
+          "previous": { "type": "number", "description": "The temperature before the change." },
+          "current": { "type": "number", "description": "The temperature after the change." }
+        },
+        "required": ["deviceId", "previous", "current"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "restore",
+      "description": "Undo a temperature change by restoring the device to the previous value in the given Setting, as returned by setTemperature. Only works for one hour after the original change. Changes data. This action cannot be undone. Returns nothing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "setting": {
+            "type": "object",
+            "description": "The Setting returned by setTemperature that should be reverted.",
+            "properties": {
+              "deviceId": { "type": "string", "description": "The id of the device that was changed." },
+              "previous": { "type": "number", "description": "The temperature before the change; the value to restore." },
+              "current": { "type": "number", "description": "The temperature after the change." }
+            },
+            "required": ["deviceId", "previous", "current"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["setting"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "unlock",
+      "description": "Unlock a lock device for a number of minutes. Changes data. This action cannot be undone. Returns nothing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "deviceId": { "type": "string", "description": "The id of the lock device to unlock." },
+          "minutes": { "type": "integer", "description": "How many minutes to unlock the device for, as a whole number." }
+        },
+        "required": ["deviceId", "minutes"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false
+      }
+    }
+  ]
+}
+```

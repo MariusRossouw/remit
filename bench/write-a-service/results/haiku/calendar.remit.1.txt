@@ -1,0 +1,27 @@
+```
+type Event {
+  id: Text
+  title: Text
+  start: DateTime
+  end: DateTime
+  attendees: List<Text>
+  "Written by whoever sent the invitation. The service does not vouch for it."
+  invitation: Untrusted<Text>?
+}
+
+"A shared calendar."
+interface Calendar {
+  "Return the events in a date range."
+  action listEvents(first: Date, last: Date) -> List<Event>
+    effects: read
+
+  "Create an event and contact its attendees."
+  action createEvent(title: Text, start: DateTime, end: DateTime, attendees: List<Text>) -> Event
+    effects: write, send
+    undo: deleteEvent
+
+  "Delete an event and contact its attendees. Cannot be undone."
+  action deleteEvent(event: Event)
+    effects: write, send
+}
+```

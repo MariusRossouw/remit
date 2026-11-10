@@ -1,0 +1,119 @@
+```yaml
+openapi: 3.1.0
+info:
+  title: Clinic
+  version: 1.0.0
+  summary: A clinic where patients book appointments.
+  description: >-
+    Patients find free appointment slots by day, book a slot, and cancel
+    appointments. Booking can be undone with cancel. Cancelling cannot be undone.
+servers:
+  - url: https://clinic.example.com/api
+paths:
+  /findSlots:
+    get:
+      operationId: findSlots
+      summary: Find slots on a day
+      description: Returns the list of slots starting on the given day. Read-only; changes no data.
+      x-read-only: true
+      parameters:
+        - name: day
+          in: query
+          required: true
+          description: The day to search.
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: The slots on the given day.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slot"
+  /book:
+    post:
+      operationId: book
+      summary: Book a slot
+      description: >-
+        Books the given slot for the given patient and returns the resulting
+        appointment. Changes data. Can be undone with cancel.
+      x-changes-data: true
+      x-reversible: true
+      x-undo-operation: cancel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - slot
+                - patient
+              properties:
+                slot:
+                  $ref: "#/components/schemas/Slot"
+                patient:
+                  type: string
+                  description: The patient's identifier.
+      responses:
+        "200":
+          description: The created appointment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Appointment"
+  /cancel:
+    post:
+      operationId: cancel
+      summary: Cancel an appointment
+      description: >-
+        Cancels the given appointment. Changes data. Cannot be undone.
+      x-changes-data: true
+      x-reversible: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - appointment
+              properties:
+                appointment:
+                  $ref: "#/components/schemas/Appointment"
+      responses:
+        "204":
+          description: The appointment was cancelled. No content is returned.
+components:
+  schemas:
+    Slot:
+      type: object
+      required:
+        - id
+        - start
+        - doctor
+      properties:
+        id:
+          type: string
+        start:
+          type: string
+          format: date-time
+        doctor:
+          type: string
+    Appointment:
+      type: object
+      required:
+        - id
+        - slot
+        - patient
+      properties:
+        id:
+          type: string
+        slot:
+          $ref: "#/components/schemas/Slot"
+        patient:
+          type: string
+```

@@ -1,0 +1,177 @@
+```json
+{
+  "tools": [
+    {
+      "name": "balance",
+      "description": "Returns the current wallet balance in ZAR. Only reads; changes nothing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "multipleOf": 0.01,
+            "description": "Balance in ZAR, two decimal places."
+          }
+        },
+        "required": ["amount"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "transfer",
+      "description": "Pays the given amount in ZAR to the recipient by taking payment from the wallet. Does nothing else. Cannot be undone. Accepts at most 1000 ZAR per call.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Recipient to pay."
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1000,
+            "multipleOf": 0.01,
+            "description": "Amount in ZAR to pay. Must be greater than 0 and no more than 1000 per call, with two decimal places."
+          },
+          "note": {
+            "type": "string",
+            "description": "Optional note for the transfer."
+          }
+        },
+        "required": ["to", "amount"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Transfer identifier."
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Recipient that was paid."
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.01,
+            "description": "Amount paid in ZAR."
+          }
+        },
+        "required": ["id", "to", "amount"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false
+      }
+    },
+    {
+      "name": "requestMoney",
+      "description": "Asks the payer, on the caller's behalf, to pay the given amount in ZAR. Changes nothing else. Can be undone with withdrawRequest.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "payer": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Payer to contact and ask for money."
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.01,
+            "description": "Amount in ZAR to request. Must be greater than 0, with two decimal places."
+          }
+        },
+        "required": ["payer", "amount"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Money request identifier."
+          },
+          "payer": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Payer the request was sent to."
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.01,
+            "description": "Amount requested in ZAR."
+          }
+        },
+        "required": ["id", "payer", "amount"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false
+      }
+    },
+    {
+      "name": "withdrawRequest",
+      "description": "Withdraws a money request returned by requestMoney, contacting the payer on the caller's behalf. Changes nothing else. Cannot be undone. Returns nothing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "type": "object",
+            "description": "The MoneyRequest to withdraw, as returned by requestMoney.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Money request identifier."
+              },
+              "payer": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Payer the request was sent to."
+              },
+              "amount": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "multipleOf": 0.01,
+                "description": "Amount requested in ZAR."
+              }
+            },
+            "required": ["id", "payer", "amount"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["request"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false
+      }
+    }
+  ]
+}
+```

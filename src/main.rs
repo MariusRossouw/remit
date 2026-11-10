@@ -8,6 +8,7 @@ remit - checker for the Remit contract language
 Usage:
   remit check [--json] <file>...   Check contracts. Exit code 1 if any rule is broken.
   remit explain <file>...          Print each grant in plain language.
+  remit list <file>...             Print what each file declares, as JSON.
   remit --version
 
 Files named by `use` lines are loaded automatically.
@@ -31,7 +32,7 @@ fn main() -> ExitCode {
             print!("{}", HELP);
             ExitCode::SUCCESS
         }
-        "check" | "explain" => {
+        "check" | "explain" | "list" => {
             let json = rest.iter().any(|a| a == "--json");
             let files: Vec<String> = rest.iter().filter(|a| !a.starts_with("--")).cloned().collect();
             if files.is_empty() {
@@ -51,13 +52,18 @@ fn main() -> ExitCode {
                 }
             } else {
                 if !world.diags.is_empty() {
-                    // Never describe a grant that did not pass the checker.
+                    // Never describe a contract that did not pass the checker.
                     eprint!("{}", to_text(&world.diags));
-                    eprintln!("Not explained: fix the problems above first.");
+                    eprintln!("Nothing printed: fix the problems above first.");
                     return ExitCode::from(1);
                 }
-                for &f in &world.entries {
-                    print!("{}", remit::explain::explain(&world, f));
+                if command == "explain" {
+                    for &f in &world.entries {
+                        print!("{}", remit::explain::explain(&world, f));
+                    }
+                } else {
+                    let files: Vec<String> = world.entries.iter().map(|&f| remit::list::list(&world, f)).collect();
+                    println!("[{}]", files.join(","));
                 }
             }
             if world.diags.is_empty() {

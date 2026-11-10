@@ -1,0 +1,49 @@
+{
+  "id": "calendar",
+  "name": "Calendar",
+  "brief": "Service: Calendar. A shared calendar.\n\nData:\n- Event: id (text), title (text), start (date and time), end (date and time), attendees (a list of text), invitation (optional text written by whoever sent the invitation, not by this service)\n\nActions:\n- listEvents(first: date, last: date) returns a list of Event. Only reads.\n- createEvent(title: text, start: date and time, end: date and time, attendees: a list of text) returns an Event. Changes data and contacts the attendees on the caller's behalf. Can be undone with deleteEvent.\n- deleteEvent(event: Event) returns nothing. Changes data and contacts the attendees on the caller's behalf. Cannot be undone.\n\nUse exactly these action, parameter, type, and field names.",
+  "actions": [
+    {
+      "name": "listEvents",
+      "params": [
+        "first",
+        "last"
+      ],
+      "effects": [
+        "read"
+      ],
+      "undo": null
+    },
+    {
+      "name": "createEvent",
+      "params": [
+        "title",
+        "start",
+        "end",
+        "attendees"
+      ],
+      "effects": [
+        "send",
+        "write"
+      ],
+      "undo": "deleteEvent"
+    },
+    {
+      "name": "deleteEvent",
+      "params": [
+        "event"
+      ],
+      "effects": [
+        "send",
+        "write"
+      ],
+      "undo": null
+    }
+  ],
+  "untrusted": [
+    [
+      "Event",
+      "invitation"
+    ]
+  ]
+}

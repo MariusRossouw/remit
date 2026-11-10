@@ -1,0 +1,25 @@
+```
+"A price quote for sending a parcel."
+type Quote { id: Text  price: Money  days: Int }
+
+"A parcel that has been booked for delivery."
+type Shipment { id: Text  quote: Quote  to: Text }
+
+"One tracking update. The note is written by couriers, not by this service."
+type TrackingEvent { at: DateTime  note: Untrusted<Text> }
+
+"A courier that quotes for, ships, and tracks parcels."
+interface Parcels {
+  "Get a price and delivery time for sending a parcel of a given weight."
+  action quote(origin: Text, destination: Text, grams: Int) -> Quote
+    effects: read
+
+  "Ship a parcel using a quote. Takes payment and cannot be undone."
+  action ship(quote: Quote, to: Text) -> Shipment
+    effects: write, spend
+
+  "List the tracking events for a shipment. Notes are written by couriers."
+  action track(shipmentId: Text) -> List<TrackingEvent>
+    effects: read
+}
+```

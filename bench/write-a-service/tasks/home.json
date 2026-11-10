@@ -1,0 +1,48 @@
+{
+  "id": "home",
+  "name": "Home",
+  "brief": "Service: Home. Controls devices in a house.\n\nData:\n- DeviceKind: one of light, lock, thermostat\n- Device: id (text), name (text), kind (a DeviceKind)\n- Setting: deviceId (text), previous (decimal number), current (decimal number)\n\nActions:\n- listDevices() returns a list of Device. Only reads.\n- setTemperature(deviceId: text, celsius: decimal number) returns a Setting. Changes data. Can be undone with restore, for one hour afterwards.\n- restore(setting: Setting) returns nothing. Changes data. Cannot be undone.\n- unlock(deviceId: text, minutes: whole number) returns nothing. Changes data. Cannot be undone.\n\nUse exactly these action, parameter, type, and field names.",
+  "actions": [
+    {
+      "name": "listDevices",
+      "params": [],
+      "effects": [
+        "read"
+      ],
+      "undo": null
+    },
+    {
+      "name": "setTemperature",
+      "params": [
+        "deviceId",
+        "celsius"
+      ],
+      "effects": [
+        "write"
+      ],
+      "undo": "restore"
+    },
+    {
+      "name": "restore",
+      "params": [
+        "setting"
+      ],
+      "effects": [
+        "write"
+      ],
+      "undo": null
+    },
+    {
+      "name": "unlock",
+      "params": [
+        "deviceId",
+        "minutes"
+      ],
+      "effects": [
+        "write"
+      ],
+      "undo": null
+    }
+  ],
+  "untrusted": []
+}

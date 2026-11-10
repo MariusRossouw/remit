@@ -1,0 +1,49 @@
+{
+  "id": "wallet",
+  "name": "Wallet",
+  "brief": "Service: Wallet. A wallet for sending and requesting money.\n\nData:\n- Balance: amount (money)\n- Transfer: id (text), to (text), amount (money)\n- MoneyRequest: id (text), payer (text), amount (money)\n\nActions:\n- balance() returns a Balance. Only reads.\n- transfer(to: text, amount: money, note: optional text) returns a Transfer. Takes payment, never more than 1000 ZAR in one call, and does nothing else. Cannot be undone.\n- requestMoney(payer: text, amount: money) returns a MoneyRequest. Contacts the payer on the caller's behalf and changes nothing else. Can be undone with withdrawRequest.\n- withdrawRequest(request: MoneyRequest) returns nothing. Contacts the payer on the caller's behalf and changes nothing else. Cannot be undone.\n\nUse exactly these action, parameter, type, and field names.",
+  "actions": [
+    {
+      "name": "balance",
+      "params": [],
+      "effects": [
+        "read"
+      ],
+      "undo": null
+    },
+    {
+      "name": "transfer",
+      "params": [
+        "to",
+        "amount"
+      ],
+      "effects": [
+        "spend"
+      ],
+      "undo": null,
+      "spend_max": "1000 ZAR"
+    },
+    {
+      "name": "requestMoney",
+      "params": [
+        "payer",
+        "amount"
+      ],
+      "effects": [
+        "send"
+      ],
+      "undo": "withdrawRequest"
+    },
+    {
+      "name": "withdrawRequest",
+      "params": [
+        "request"
+      ],
+      "effects": [
+        "send"
+      ],
+      "undo": null
+    }
+  ],
+  "untrusted": []
+}

@@ -6,8 +6,8 @@ Milestones have exit criteria, not dates. Each one must be useful without the ne
 
 | Goal | Target |
 | --- | --- |
-| Learnable in one read | The full language specification fits in 8,000 tokens |
-| Agents succeed without training | An agent given only the specification writes a valid contract first try on 90% of a public task suite |
+| Learnable in one read | The full language specification fits in 8,000 tokens. Currently about 4,000 |
+| Agents succeed without training | An agent given only the specification writes a valid contract first try on 90% of a public task suite. First result: 24 of 24 on an easy suite ([write-a-service](../bench/write-a-service)) |
 | Safe unread | No implementation in a public red-team suite exceeds its granted capabilities |
 | Minutes, not weeks | From a one-sentence idea to a running, bounded service in under ten minutes |
 | Plain-language consent | People shown a generated permission prompt can correctly say what they approved |

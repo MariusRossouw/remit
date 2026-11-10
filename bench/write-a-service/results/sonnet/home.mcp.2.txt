@@ -1,0 +1,130 @@
+```json
+{
+  "tools": [
+    {
+      "name": "listDevices",
+      "description": "List all devices in the house. Only reads data; changes nothing.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "devices": {
+            "type": "array",
+            "description": "All devices in the house.",
+            "items": {
+              "type": "object",
+              "description": "A device in the house.",
+              "properties": {
+                "id": { "type": "string", "description": "Unique identifier of the device." },
+                "name": { "type": "string", "description": "Human-readable name of the device." },
+                "kind": {
+                  "type": "string",
+                  "description": "The kind of device.",
+                  "enum": ["light", "lock", "thermostat"]
+                }
+              },
+              "required": ["id", "name", "kind"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["devices"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "setTemperature",
+      "description": "Set the target temperature of a device, in degrees Celsius. Returns a Setting holding the previous and current values. Changes data. The change can be undone with the restore tool, passing the returned Setting, for one hour afterwards.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "deviceId": { "type": "string", "description": "The id of the device to change." },
+          "celsius": { "type": "number", "description": "The new temperature in degrees Celsius." }
+        },
+        "required": ["deviceId", "celsius"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "description": "A Setting: the temperature change that was made.",
+        "properties": {
+          "deviceId": { "type": "string", "description": "The id of the device that was changed." },
+          "previous": { "type": "number", "description": "The temperature before the change." },
+          "current": { "type": "number", "description": "The temperature after the change." }
+        },
+        "required": ["deviceId", "previous", "current"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false
+      }
+    },
+    {
+      "name": "restore",
+      "description": "Undo a temperature change by restoring the device to the previous value of the given Setting. Only works for one hour after the setTemperature call that produced the Setting. Changes data. This cannot be undone. Returns nothing.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "setting": {
+            "type": "object",
+            "description": "The Setting returned by setTemperature that should be undone.",
+            "properties": {
+              "deviceId": { "type": "string", "description": "The id of the device that was changed." },
+              "previous": { "type": "number", "description": "The temperature before the change; this is the value restored." },
+              "current": { "type": "number", "description": "The temperature after the change." }
+            },
+            "required": ["deviceId", "previous", "current"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["setting"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "unlock",
+      "description": "Unlock a device for a number of minutes. Changes data. This cannot be undone. Returns nothing.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "deviceId": { "type": "string", "description": "The id of the device to unlock." },
+          "minutes": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "How many minutes to unlock for, as a whole number."
+          }
+        },
+        "required": ["deviceId", "minutes"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false
+      }
+    }
+  ]
+}
+```

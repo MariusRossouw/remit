@@ -1,0 +1,137 @@
+```yaml
+openapi: 3.1.0
+info:
+  title: Clinic
+  version: 1.0.0
+  summary: A clinic where patients book appointments.
+  description: >-
+    Patients find open appointment slots for a day, book one, and may cancel a booked appointment.
+    Booking can be undone with cancel. Cancelling is permanent.
+paths:
+  /findSlots:
+    get:
+      operationId: findSlots
+      summary: Find the open slots on a day.
+      description: >-
+        Read-only. Changes no data. Returns the Slots that start on the given day.
+      x-effects: read-only
+      x-changes-data: false
+      parameters:
+        - name: day
+          in: query
+          required: true
+          description: The day to search for slots.
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: The Slots found for the day.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slot"
+        "400":
+          description: The day is missing or is not a valid date.
+  /book:
+    post:
+      operationId: book
+      summary: Book a Slot for a patient.
+      description: >-
+        Changes data. Creates an Appointment for the given Slot and patient.
+        Can be undone with cancel.
+      x-effects: changes-data
+      x-changes-data: true
+      x-reversible: true
+      x-reversed-by: cancel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - slot
+                - patient
+              properties:
+                slot:
+                  $ref: "#/components/schemas/Slot"
+                patient:
+                  type: string
+                  description: The patient who is booking the Slot.
+      responses:
+        "201":
+          description: The Appointment that was created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Appointment"
+        "400":
+          description: The request is missing the slot or patient, or the slot is invalid.
+        "409":
+          description: The slot is no longer available.
+  /cancel:
+    post:
+      operationId: cancel
+      summary: Cancel an Appointment.
+      description: >-
+        Changes data. Removes the given Appointment. This cannot be undone.
+        Cancelling a booking is the only way to undo book.
+      x-effects: changes-data
+      x-changes-data: true
+      x-reversible: false
+      x-irreversible: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - appointment
+              properties:
+                appointment:
+                  $ref: "#/components/schemas/Appointment"
+      responses:
+        "204":
+          description: The Appointment was cancelled. The response has no content.
+        "400":
+          description: The request is missing the appointment or the appointment is invalid.
+        "404":
+          description: No such Appointment exists.
+components:
+  schemas:
+    Slot:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - start
+        - doctor
+      properties:
+        id:
+          type: string
+        start:
+          type: string
+          format: date-time
+        doctor:
+          type: string
+    Appointment:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slot
+        - patient
+      properties:
+        id:
+          type: string
+        slot:
+          $ref: "#/components/schemas/Slot"
+        patient:
+          type: string
+```

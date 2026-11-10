@@ -1,0 +1,39 @@
+{
+  "id": "clinic",
+  "name": "Clinic",
+  "brief": "Service: Clinic. A clinic where patients book appointments.\n\nData:\n- Slot: id (text), start (date and time), doctor (text)\n- Appointment: id (text), slot (a Slot), patient (text)\n\nActions:\n- findSlots(day: date) returns a list of Slot. Only reads.\n- book(slot: Slot, patient: text) returns an Appointment. Changes data. Can be undone with cancel.\n- cancel(appointment: Appointment) returns nothing. Changes data. Cannot be undone.\n\nUse exactly these action, parameter, type, and field names.",
+  "actions": [
+    {
+      "name": "findSlots",
+      "params": [
+        "day"
+      ],
+      "effects": [
+        "read"
+      ],
+      "undo": null
+    },
+    {
+      "name": "book",
+      "params": [
+        "slot",
+        "patient"
+      ],
+      "effects": [
+        "write"
+      ],
+      "undo": "cancel"
+    },
+    {
+      "name": "cancel",
+      "params": [
+        "appointment"
+      ],
+      "effects": [
+        "write"
+      ],
+      "undo": null
+    }
+  ],
+  "untrusted": []
+}

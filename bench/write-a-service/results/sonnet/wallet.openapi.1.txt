@@ -1,0 +1,153 @@
+```yaml
+openapi: 3.1.0
+info:
+  title: Wallet
+  version: 1.0.0
+  description: A wallet for sending and requesting money.
+paths:
+  /balance:
+    get:
+      operationId: balance
+      summary: Get the wallet balance
+      description: Only reads. Changes nothing.
+      x-side-effects: none
+      x-reversible: not-applicable
+      responses:
+        "200":
+          description: The current balance.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Balance"
+  /transfer:
+    post:
+      operationId: transfer
+      summary: Send money to a recipient
+      description: >
+        Takes payment, never more than 1000 ZAR in one call, and does nothing
+        else. Cannot be undone.
+      x-side-effects: takes-payment
+      x-reversible: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, amount]
+              properties:
+                to:
+                  type: string
+                amount:
+                  allOf:
+                    - $ref: "#/components/schemas/Money"
+                  description: Must not exceed 1000 ZAR in one call.
+                  if:
+                    properties:
+                      currency:
+                        const: ZAR
+                    required: [currency]
+                  then:
+                    properties:
+                      value:
+                        maximum: 1000
+                note:
+                  type: string
+      responses:
+        "200":
+          description: The completed transfer.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transfer"
+  /requestMoney:
+    post:
+      operationId: requestMoney
+      summary: Request money from a payer
+      description: >
+        Contacts the payer on the caller's behalf and changes nothing else.
+        Can be undone with withdrawRequest.
+      x-side-effects: contacts-payer
+      x-reversible: true
+      x-undone-by: withdrawRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payer, amount]
+              properties:
+                payer:
+                  type: string
+                amount:
+                  $ref: "#/components/schemas/Money"
+      responses:
+        "200":
+          description: The created money request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoneyRequest"
+  /withdrawRequest:
+    post:
+      operationId: withdrawRequest
+      summary: Withdraw a money request
+      description: >
+        Contacts the payer on the caller's behalf and changes nothing else.
+        Cannot be undone.
+      x-side-effects: contacts-payer
+      x-reversible: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [request]
+              properties:
+                request:
+                  $ref: "#/components/schemas/MoneyRequest"
+      responses:
+        "204":
+          description: The request was withdrawn. No content returned.
+components:
+  schemas:
+    Money:
+      type: object
+      required: [value, currency]
+      properties:
+        value:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          description: ISO 4217 currency code, for example ZAR.
+          pattern: "^[A-Z]{3}$"
+    Balance:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          $ref: "#/components/schemas/Money"
+    Transfer:
+      type: object
+      required: [id, to, amount]
+      properties:
+        id:
+          type: string
+        to:
+          type: string
+        amount:
+          $ref: "#/components/schemas/Money"
+    MoneyRequest:
+      type: object
+      required: [id, payer, amount]
+      properties:
+        id:
+          type: string
+        payer:
+          type: string
+        amount:
+          $ref: "#/components/schemas/Money"
+```

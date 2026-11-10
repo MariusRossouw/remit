@@ -1,0 +1,30 @@
+```
+"Smart devices in a house: lights, locks, and thermostats."
+enum DeviceKind { light, lock, thermostat }
+
+"A controllable device in the house."
+type Device { id: Text  name: Text  kind: DeviceKind }
+
+"A device setting before and after a change."
+type Setting { deviceId: Text  previous: Decimal  current: Decimal }
+
+"Controls devices in a house."
+interface Home {
+  "List all devices in the house."
+  action listDevices() -> List<Device>
+    effects: read
+
+  "Set a thermostat's target temperature in degrees Celsius. Can be undone with restore for one hour."
+  action setTemperature(deviceId: Text, celsius: Decimal) -> Setting
+    effects: write
+    undo: restore within 1h
+
+  "Restore a device setting to its previous value. Cannot be undone."
+  action restore(setting: Setting)
+    effects: write
+
+  "Unlock a lock for a number of minutes. Cannot be undone."
+  action unlock(deviceId: Text, minutes: Int)
+    effects: write
+}
+```

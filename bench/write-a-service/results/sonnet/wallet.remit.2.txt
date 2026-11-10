@@ -1,0 +1,25 @@
+```
+type Balance { amount: Money }
+type Transfer { id: Text  to: Text  amount: Money }
+type MoneyRequest { id: Text  payer: Text  amount: Money }
+
+"A wallet for sending and requesting money."
+interface Wallet {
+  "Read the current wallet balance."
+  action balance() -> Balance
+    effects: read
+
+  "Send money to someone. Takes payment, never more than 1000 ZAR in one call. Cannot be undone."
+  action transfer(to: Text, amount: Money, note: Text?) -> Transfer
+    effects: spend(max: 1000 ZAR)
+
+  "Ask someone to pay you. Contacts the payer on your behalf. Can be undone by withdrawing the request."
+  action requestMoney(payer: Text, amount: Money) -> MoneyRequest
+    effects: send
+    undo: withdrawRequest
+
+  "Withdraw a money request. Contacts the payer on your behalf. Cannot be undone."
+  action withdrawRequest(request: MoneyRequest)
+    effects: send
+}
+```

@@ -1,0 +1,38 @@
+```
+// Parcels: a courier that quotes for, ships, and tracks parcels.
+
+"A price and delivery time for shipping one parcel."
+type Quote {
+  id: Text
+  price: Money
+  days: Int
+}
+
+"A parcel the courier has accepted for delivery."
+type Shipment {
+  id: Text
+  quote: Quote
+  to: Text
+}
+
+"One tracking step, written by the courier and not vouched for by this service."
+type TrackingEvent {
+  at: DateTime
+  note: Untrusted<Text>
+}
+
+"A courier that quotes for, ships, and tracks parcels."
+interface Parcels {
+  "Price and transit time for a parcel of the given weight between two places. Reads only."
+  action quote(origin: Text, destination: Text, grams: Int) -> Quote
+    effects: read
+
+  "Ship a parcel against a quote and take payment. Cannot be undone."
+  action ship(quote: Quote, to: Text) -> Shipment
+    effects: write, spend
+
+  "List the tracking events recorded for a shipment. Reads only."
+  action track(shipmentId: Text) -> List<TrackingEvent>
+    effects: read
+}
+```

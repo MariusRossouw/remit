@@ -1,0 +1,31 @@
+```
+"A bookable time slot with one doctor."
+type Slot {
+  id: Text
+  start: DateTime
+  doctor: Text
+}
+
+"A patient's booking of one slot."
+type Appointment {
+  id: Text
+  slot: Slot
+  patient: Text
+}
+
+"A clinic where patients book appointments."
+interface Clinic {
+  "List the slots open on a day."
+  action findSlots(day: Date) -> List<Slot>
+    effects: read
+
+  "Book a slot for a patient. Undo with cancel."
+  action book(slot: Slot, patient: Text) -> Appointment
+    effects: write
+    undo: cancel
+
+  "Cancel an appointment. This cannot be undone."
+  action cancel(appointment: Appointment)
+    effects: write
+}
+```

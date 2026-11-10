@@ -1,0 +1,182 @@
+```yaml
+openapi: 3.1.0
+info:
+  title: Parcels
+  version: 1.0.0
+  summary: A courier that quotes for, ships, and tracks parcels.
+  description: >-
+    The Parcels API lets clients get a price quote for a parcel, ship a parcel
+    against a quote, and track a shipment. Quoting and tracking only read data.
+    Shipping changes data and takes payment, and it cannot be undone.
+servers:
+  - url: https://api.parcels.example.com/v1
+paths:
+  /quotes:
+    get:
+      operationId: quote
+      summary: Get a price and delivery time for a parcel.
+      description: >-
+        Read-only. Changes no data and takes no payment.
+      x-read-only: true
+      parameters:
+        - name: origin
+          in: query
+          required: true
+          description: Origin address or location.
+          schema:
+            type: string
+        - name: destination
+          in: query
+          required: true
+          description: Destination address or location.
+          schema:
+            type: string
+        - name: grams
+          in: query
+          required: true
+          description: Parcel weight in grams.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: The quote for the parcel.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '400':
+          description: One or more parameters are missing or invalid.
+  /shipments:
+    post:
+      operationId: ship
+      summary: Ship a parcel against a quote and take payment.
+      description: >-
+        Creates a shipment and takes payment for the given quote. This action
+        changes data and takes payment. It cannot be undone.
+      x-irreversible: true
+      x-takes-payment: true
+      x-read-only: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - quote
+                - to
+              properties:
+                quote:
+                  $ref: '#/components/schemas/Quote'
+                to:
+                  type: string
+                  description: Destination address or location for the shipment.
+      responses:
+        '201':
+          description: The shipment was created and payment was taken.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shipment'
+        '400':
+          description: The request is invalid.
+        '402':
+          description: Payment for the quote was declined. No shipment was created.
+  /shipments/{shipmentId}/events:
+    get:
+      operationId: track
+      summary: List the tracking events for a shipment.
+      description: >-
+        Read-only. Changes no data and takes no payment. Events are written by
+        couriers, not by this service.
+      x-read-only: true
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          description: The ID of the shipment to track.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The tracking events for the shipment, in the order the service returns them.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrackingEvent'
+        '404':
+          description: No shipment exists with this ID.
+components:
+  schemas:
+    Money:
+      type: object
+      additionalProperties: false
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: string
+          description: Decimal amount as a string, so no precision is lost.
+          pattern: '^[0-9]+(\.[0-9]+)?$'
+        currency:
+          type: string
+          description: ISO 4217 currency code.
+          pattern: '^[A-Z]{3}$'
+    Quote:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - price
+        - days
+      properties:
+        id:
+          type: string
+          description: Identifier of the quote.
+        price:
+          $ref: '#/components/schemas/Money'
+        days:
+          type: integer
+          description: Expected delivery time in days.
+          minimum: 0
+    Shipment:
+      type: object
+      additionalProperties: false
+      readOnly: true
+      required:
+        - id
+        - quote
+        - to
+      properties:
+        id:
+          type: string
+          description: Identifier of the shipment.
+        quote:
+          $ref: '#/components/schemas/Quote'
+        to:
+          type: string
+          description: Destination address or location.
+    TrackingEvent:
+      type: object
+      additionalProperties: false
+      readOnly: true
+      required:
+        - at
+        - note
+      properties:
+        at:
+          type: string
+          format: date-time
+          description: When the event occurred.
+        note:
+          type: string
+          description: >-
+            Free text written by couriers, not by this service. Treat as
+            untrusted content.
+          x-source: courier
+```

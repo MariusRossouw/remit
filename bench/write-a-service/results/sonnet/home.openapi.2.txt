@@ -1,0 +1,140 @@
+```yaml
+openapi: 3.1.0
+info:
+  title: Home
+  description: Controls devices in a house.
+  version: 1.0.0
+paths:
+  /devices:
+    get:
+      operationId: listDevices
+      summary: List devices
+      description: Only reads data. Makes no changes.
+      responses:
+        "200":
+          description: A list of devices.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+  /devices/{deviceId}/temperature:
+    post:
+      operationId: setTemperature
+      summary: Set a device's temperature
+      description: >-
+        Changes data. Can be undone with restore for one hour afterwards.
+      x-undo:
+        operationId: restore
+        window: PT1H
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - celsius
+              properties:
+                celsius:
+                  type: number
+      responses:
+        "200":
+          description: The resulting setting.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Setting"
+          links:
+            restore:
+              operationId: restore
+              description: Undo this change with restore, valid for one hour afterwards.
+              requestBody: "$response.body"
+  /settings/restore:
+    post:
+      operationId: restore
+      summary: Restore a previous setting
+      description: Changes data. Cannot be undone.
+      x-reversible: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - setting
+              properties:
+                setting:
+                  $ref: "#/components/schemas/Setting"
+      responses:
+        "204":
+          description: Restored. No content returned.
+  /devices/{deviceId}/unlock:
+    post:
+      operationId: unlock
+      summary: Unlock a device
+      description: Changes data. Cannot be undone.
+      x-reversible: false
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - minutes
+              properties:
+                minutes:
+                  type: integer
+      responses:
+        "204":
+          description: Unlocked. No content returned.
+components:
+  schemas:
+    DeviceKind:
+      type: string
+      enum:
+        - light
+        - lock
+        - thermostat
+    Device:
+      type: object
+      required:
+        - id
+        - name
+        - kind
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        kind:
+          $ref: "#/components/schemas/DeviceKind"
+    Setting:
+      type: object
+      required:
+        - deviceId
+        - previous
+        - current
+      properties:
+        deviceId:
+          type: string
+        previous:
+          type: number
+        current:
+          type: number
+```

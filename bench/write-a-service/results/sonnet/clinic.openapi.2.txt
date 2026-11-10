@@ -1,0 +1,106 @@
+```yaml
+openapi: 3.1.0
+info:
+  title: Clinic
+  description: A clinic where patients book appointments.
+  version: 1.0.0
+paths:
+  /slots:
+    get:
+      operationId: findSlots
+      summary: Find available slots for a day
+      description: Only reads data; does not change anything.
+      parameters:
+        - name: day
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: A list of slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slot"
+  /appointments:
+    post:
+      operationId: book
+      summary: Book an appointment
+      description: Changes data. Can be undone with cancel.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - slot
+                - patient
+              properties:
+                slot:
+                  $ref: "#/components/schemas/Slot"
+                patient:
+                  type: string
+      responses:
+        "200":
+          description: The booked appointment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Appointment"
+      links:
+        cancel:
+          operationId: cancel
+  /appointments/cancel:
+    post:
+      operationId: cancel
+      summary: Cancel an appointment
+      description: Changes data. Cannot be undone.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - appointment
+              properties:
+                appointment:
+                  $ref: "#/components/schemas/Appointment"
+      responses:
+        "204":
+          description: Appointment cancelled; no content returned
+components:
+  schemas:
+    Slot:
+      type: object
+      required:
+        - id
+        - start
+        - doctor
+      properties:
+        id:
+          type: string
+        start:
+          type: string
+          format: date-time
+        doctor:
+          type: string
+    Appointment:
+      type: object
+      required:
+        - id
+        - slot
+        - patient
+      properties:
+        id:
+          type: string
+        slot:
+          $ref: "#/components/schemas/Slot"
+        patient:
+          type: string
+```

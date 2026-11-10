@@ -1,0 +1,47 @@
+{
+  "id": "parcels",
+  "name": "Parcels",
+  "brief": "Service: Parcels. A courier that quotes for, ships, and tracks parcels.\n\nData:\n- Quote: id (text), price (money), days (whole number)\n- Shipment: id (text), quote (a Quote), to (text)\n- TrackingEvent: at (date and time), note (text written by couriers, not by this service)\n\nActions:\n- quote(origin: text, destination: text, grams: whole number) returns a Quote. Only reads.\n- ship(quote: Quote, to: text) returns a Shipment. Changes data and takes payment. Cannot be undone.\n- track(shipmentId: text) returns a list of TrackingEvent. Only reads.\n\nUse exactly these action, parameter, type, and field names.",
+  "actions": [
+    {
+      "name": "quote",
+      "params": [
+        "origin",
+        "destination",
+        "grams"
+      ],
+      "effects": [
+        "read"
+      ],
+      "undo": null
+    },
+    {
+      "name": "ship",
+      "params": [
+        "quote",
+        "to"
+      ],
+      "effects": [
+        "spend",
+        "write"
+      ],
+      "undo": null
+    },
+    {
+      "name": "track",
+      "params": [
+        "shipmentId"
+      ],
+      "effects": [
+        "read"
+      ],
+      "undo": null
+    }
+  ],
+  "untrusted": [
+    [
+      "TrackingEvent",
+      "note"
+    ]
+  ]
+}

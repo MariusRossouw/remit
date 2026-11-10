@@ -1,0 +1,189 @@
+```json
+{
+  "tools": [
+    {
+      "name": "balance",
+      "description": "Returns the current wallet balance in ZAR. Read-only; changes nothing.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "multipleOf": 0.01,
+            "description": "Current balance in ZAR, with up to two decimal places."
+          }
+        },
+        "required": ["amount"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "transfer",
+      "description": "Sends money from the wallet to the recipient named in 'to'. Takes payment only: no more than 1000 ZAR per call, and it does nothing else. The payment cannot be undone.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Recipient of the payment."
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1000,
+            "multipleOf": 0.01,
+            "description": "Amount to pay in ZAR, greater than 0 and at most 1000, with up to two decimal places."
+          },
+          "note": {
+            "type": "string",
+            "description": "Optional note for the transfer. It does not change the payment."
+          }
+        },
+        "required": ["to", "amount"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Identifier of the completed transfer."
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Recipient of the payment."
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1000,
+            "multipleOf": 0.01,
+            "description": "Amount paid in ZAR."
+          }
+        },
+        "required": ["id", "to", "amount"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "requestMoney",
+      "description": "Asks the payer named in 'payer' to pay the requested amount on the caller's behalf. It contacts the payer and changes nothing else. The request can be undone with withdrawRequest.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "payer": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Person or account asked to pay."
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.01,
+            "description": "Amount requested in ZAR, greater than 0, with up to two decimal places."
+          }
+        },
+        "required": ["payer", "amount"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Identifier of the money request."
+          },
+          "payer": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Person or account asked to pay."
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.01,
+            "description": "Amount requested in ZAR."
+          }
+        },
+        "required": ["id", "payer", "amount"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "withdrawRequest",
+      "description": "Withdraws a previously made money request and notifies the payer on the caller's behalf. It changes nothing else. Withdrawal cannot be undone.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "request": {
+            "type": "object",
+            "description": "The money request to withdraw, as returned by requestMoney.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Identifier of the money request."
+              },
+              "payer": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Person or account asked to pay."
+              },
+              "amount": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "multipleOf": 0.01,
+                "description": "Amount requested in ZAR."
+              }
+            },
+            "required": ["id", "payer", "amount"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["request"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    }
+  ]
+}
+```

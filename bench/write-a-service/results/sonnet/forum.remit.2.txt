@@ -1,0 +1,28 @@
+```remit
+"A post on the discussion board. The body is written by members, not by this service."
+type Post {
+  id: Text
+  author: Text
+  body: Untrusted<Text>
+}
+
+"A discussion board where members read, publish, remove and report posts."
+interface Forum {
+  "List the posts under a topic."
+  action listPosts(topic: Text) -> List<Post>
+    effects: read
+
+  "Publish a new post under a topic."
+  action publish(topic: Text, body: Text) -> Post
+    effects: write
+    undo: remove
+
+  "Permanently remove a post. This cannot be undone."
+  action remove(post: Post)
+    effects: write
+
+  "Report a post to the moderators on the caller's behalf. This cannot be undone."
+  action report(postId: Text, reason: Text)
+    effects: send
+}
+```

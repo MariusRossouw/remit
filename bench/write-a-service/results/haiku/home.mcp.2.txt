@@ -1,0 +1,143 @@
+```json
+{
+  "tools": [
+    {
+      "name": "listDevices",
+      "description": "Lists all devices in the home. Each device has an id, a name, and a kind (light, lock, or thermostat). This tool only reads data.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "enum": ["light", "lock", "thermostat"]
+            }
+          },
+          "required": ["id", "name", "kind"],
+          "additionalProperties": false
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "setTemperature",
+      "description": "Sets the temperature of the device identified by deviceId to celsius degrees. Returns a Setting with the device's deviceId, its previous value, and its current value. The change can be undone with restore, but only within one hour after this call.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "description": "The id of the device, as returned by listDevices."
+          },
+          "celsius": {
+            "type": "number",
+            "description": "The target temperature in degrees Celsius."
+          }
+        },
+        "required": ["deviceId", "celsius"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string"
+          },
+          "previous": {
+            "type": "number"
+          },
+          "current": {
+            "type": "number"
+          }
+        },
+        "required": ["deviceId", "previous", "current"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "restore",
+      "description": "Restores the device in the given setting to its previous value. This change cannot be undone.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "setting": {
+            "type": "object",
+            "description": "The Setting to restore, as returned by setTemperature.",
+            "properties": {
+              "deviceId": {
+                "type": "string"
+              },
+              "previous": {
+                "type": "number"
+              },
+              "current": {
+                "type": "number"
+              }
+            },
+            "required": ["deviceId", "previous", "current"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["setting"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "unlock",
+      "description": "Unlocks the lock identified by deviceId for the given number of whole minutes. This change cannot be undone.",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "description": "The id of the lock, as returned by listDevices."
+          },
+          "minutes": {
+            "type": "integer",
+            "description": "The number of whole minutes to keep the lock unlocked."
+          }
+        },
+        "required": ["deviceId", "minutes"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false
+      }
+    }
+  ]
+}
+```

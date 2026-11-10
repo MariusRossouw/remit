@@ -1,0 +1,30 @@
+```
+// Shared calendar contract.
+
+"A calendar event."
+type Event {
+  id: Text
+  title: Text
+  start: DateTime
+  end: DateTime
+  attendees: List<Text>
+  "Written by whoever sent the invitation, not by this service."
+  invitation: Untrusted<Text>?
+}
+
+"A shared calendar."
+interface Calendar {
+  "List the events that fall between two dates."
+  action listEvents(first: Date, last: Date) -> List<Event>
+    effects: read
+
+  "Create an event and contact the attendees."
+  action createEvent(title: Text, start: DateTime, end: DateTime, attendees: List<Text>) -> Event
+    effects: write, send
+    undo: deleteEvent
+
+  "Delete an event and contact its attendees. Cannot be undone."
+  action deleteEvent(event: Event)
+    effects: write, send
+}
+```

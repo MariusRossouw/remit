@@ -1,0 +1,185 @@
+```json
+{
+  "tools": [
+    {
+      "name": "findSlots",
+      "description": "Returns the list of appointment Slots available on the given day. Read-only; does not change any data.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "description": "The day to search for open slots, as an ISO 8601 date (YYYY-MM-DD)."
+          }
+        },
+        "required": ["day"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "description": "Slot: an open appointment time with a doctor.",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier of the slot."
+            },
+            "start": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start date and time of the slot, as an RFC 3339 date-time."
+            },
+            "doctor": {
+              "type": "string",
+              "description": "Name of the doctor for this slot."
+            }
+          },
+          "required": ["id", "start", "doctor"],
+          "additionalProperties": false
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "book",
+      "description": "Books the given Slot for the given patient and returns the resulting Appointment. Changes data. The booking can be undone with the cancel tool, using the returned Appointment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "object",
+            "description": "Slot: the open appointment time to book.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier of the slot."
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Start date and time of the slot, as an RFC 3339 date-time."
+              },
+              "doctor": {
+                "type": "string",
+                "description": "Name of the doctor for this slot."
+              }
+            },
+            "required": ["id", "start", "doctor"],
+            "additionalProperties": false
+          },
+          "patient": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name or identifier of the patient the appointment is for."
+          }
+        },
+        "required": ["slot", "patient"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Appointment: a booked slot assigned to a patient.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the appointment."
+          },
+          "slot": {
+            "type": "object",
+            "description": "Slot: the booked appointment time.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier of the slot."
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Start date and time of the slot, as an RFC 3339 date-time."
+              },
+              "doctor": {
+                "type": "string",
+                "description": "Name of the doctor for this slot."
+              }
+            },
+            "required": ["id", "start", "doctor"],
+            "additionalProperties": false
+          },
+          "patient": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name or identifier of the patient the appointment is for."
+          }
+        },
+        "required": ["id", "slot", "patient"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false
+      }
+    },
+    {
+      "name": "cancel",
+      "description": "Cancels the given Appointment. Changes data. The cancellation cannot be undone. Returns nothing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "appointment": {
+            "type": "object",
+            "description": "Appointment: the booked appointment to cancel.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier of the appointment."
+              },
+              "slot": {
+                "type": "object",
+                "description": "Slot: the appointment's time.",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique identifier of the slot."
+                  },
+                  "start": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Start date and time of the slot, as an RFC 3339 date-time."
+                  },
+                  "doctor": {
+                    "type": "string",
+                    "description": "Name of the doctor for this slot."
+                  }
+                },
+                "required": ["id", "start", "doctor"],
+                "additionalProperties": false
+              },
+              "patient": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Name or identifier of the patient the appointment is for."
+              }
+            },
+            "required": ["id", "slot", "patient"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["appointment"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false
+      }
+    }
+  ]
+}
+```

@@ -1,0 +1,27 @@
+```remit
+"A calendar event. The invitation text is written by whoever sent the invitation, not by this service."
+type Event {
+  id: Text
+  title: Text
+  start: DateTime
+  end: DateTime
+  attendees: List<Text>
+  invitation: Untrusted<Text>?
+}
+
+"A shared calendar."
+interface Calendar {
+  "List the events that fall between the first and last dates."
+  action listEvents(first: Date, last: Date) -> List<Event>
+    effects: read
+
+  "Create an event and notify the attendees on the caller's behalf. Can be undone with deleteEvent."
+  action createEvent(title: Text, start: DateTime, end: DateTime, attendees: List<Text>) -> Event
+    effects: write, send
+    undo: deleteEvent
+
+  "Delete an event and notify the attendees on the caller's behalf. This cannot be undone."
+  action deleteEvent(event: Event)
+    effects: write, send
+}
+```
